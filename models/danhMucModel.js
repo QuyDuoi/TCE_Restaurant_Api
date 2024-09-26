@@ -7,9 +7,6 @@ const danhMucSchema = new mongoose.Schema(
   {
     collection: "DanhMuc",
     timestamps: true,
-
-
-    
   }
 );
 
