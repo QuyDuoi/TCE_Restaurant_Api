@@ -4,7 +4,7 @@ const banSchema = new mongoose.Schema(
   {
     tenBan: { type: String, required: true },
     sucChua: { type: String, required: true },
-    trangThai: { type: String, enum: ["Còn trống", "Đang sử dụng"], default: "Còn trống" },
+    trangThai: { type: String, require: true },
   },
   {
     collection: "Ban",
