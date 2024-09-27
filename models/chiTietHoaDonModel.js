@@ -2,10 +2,10 @@ const { mongoose } = require("../config/db");
 
 const chiTietHoaDonSchema = new mongoose.Schema(
   {
-    tenCuaHang: { type: String, required: true },
-    hinhAnh: { type: String, required: true },
-    soDienThoai: { type: String, required: true },
-    diaChi: { type: String, required: true },
+    soLuongMon: { type: Number, required: true },
+    giaTien: { type: Number, required: true },
+    id_hoaDon: { type: mongoose.Schema.Types.ObjectId, ref: "HoaDon", required: true },
+
   },
   {
     collection: "ChiTietHoaDon",

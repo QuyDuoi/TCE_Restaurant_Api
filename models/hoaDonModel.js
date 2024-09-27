@@ -6,6 +6,8 @@ const hoaDonSchema = new mongoose.Schema(
     trangThai: { type: String, enum: ["Đã Thanh Toán", "Chưa Thanh Toán"], default: "Chưa Thanh Toán" },
     tienGiamGia: { type: Number, required: true },
     ghiChu: { type: String, required: false },
+    id_ban: { type: mongoose.Schema.Types.ObjectId, ref: "Ban", required: true },
+
   },
   {
     collection: "HoaDon",
