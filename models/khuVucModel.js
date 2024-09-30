@@ -1,14 +1,17 @@
-const {mongoose} = require('../config/db');
+const { mongoose } = require("../config/db");
 
-const khuvucModel = new mongoose.Schema(
-    {
-        tenKhuVuc:{type:String, require:true},
-        id_cuaHang:{type: mongoose.Schema.Types.ObjectId,ref:"CuaHang",require:true}
+const khuVucSchema = new mongoose.Schema(
+  {
+    tenKhuVuc: { type: String, require: true },
+    id_nhaHang: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "NhaHang",
+      require: true,
     },
-    {
-        timestamps:true
-    }
-
+  },
+  {
+    timestamps: true,
+  }
 );
-let KhuVuc = mongoose.model("KhuVuc",khuvucModel)
-module.exports = {KhuVuc}
+let KhuVuc = mongoose.model("KhuVuc", khuVucSchema);
+module.exports = { KhuVuc };

@@ -3,16 +3,137 @@ const router = express.Router();
 const upload = require("../config/upload");
 
 const {
-  them_cua_hang,
-  cap_nhat_cua_hang,
-  xoa_cua_hang,
-  lay_ds_cua_hang,
-} = require("../controllers/cuaHangController");
+  them_nha_hang,
+  cap_nhat_nha_hang,
+  xoa_nha_hang,
+  lay_ds_nha_hang,
+} = require("../controllers/nhaHangController");
+
+const {
+  them_danh_muc,
+  cap_nhat_danh_muc,
+  xoa_danh_muc,
+  lay_ds_danh_muc,
+} = require("../controllers/danhMucController");
+
+const {
+  them_mon_an,
+  cap_nhat_mon_an,
+  xoa_mon_an,
+  lay_ds_mon_an,
+} = require("../controllers/monAnController");
+
+const {
+  them_nhan_vien,
+  cap_nhat_nhan_vien,
+  xoa_nhan_vien,
+  lay_ds_nhan_vien,
+} = require("../controllers/nhanVienController");
+
+const {
+  them_khu_vuc,
+  cap_nhat_khu_vuc,
+  xoa_khu_vuc,
+  lay_ds_khu_vuc,
+} = require("../controllers/khuVucController");
+
+const {
+  them_ban,
+  cap_nhat_ban,
+  xoa_ban,
+  lay_ds_ban,
+} = require("../controllers/banController");
+
+const {
+  them_nhom_topping,
+  cap_nhat_nhom_topping,
+  xoa_nhom_topping,
+  lay_ds_nhom_topping,
+} = require("../controllers/nhomToppingController");
+
+const {
+  them_topping,
+  cap_nhat_topping,
+  xoa_topping,
+  lay_ds_topping,
+} = require("../controllers/toppingController");
+
+const {
+  them_chi_tiet_hoa_don,
+  cap_nhat_chi_tiet_hoa_don,
+  xoa_chi_tiet_hoa_don,
+  lay_ds_chi_tiet_hoa_don,
+} = require("../controllers/chiTietHoaDonController");
+
+const {
+  them_hoa_don,
+  cap_nhat_hoa_don,
+  xoa_hoa_don,
+  lay_ds_hoa_don,
+} = require("../controllers/hoaDonController");
 
 // Restful Api Cửa hàng
-router.post("/themCuaHang", upload.single("hinhAnh"), them_cua_hang);
-router.put("/capNhatCuaHang/:id", upload.single("hinhAnh"), cap_nhat_cua_hang);
-router.delete("/xoaCuaHang/:id", xoa_cua_hang);
-router.get("/layDsCuaHang", lay_ds_cua_hang);
+router.post("/themNhaHang", upload.single("hinhAnh"), them_nha_hang);
+router.put("/capNhatNhaHang/:id", upload.single("hinhAnh"), cap_nhat_nha_hang);
+router.delete("/xoaNhaHang/:id", xoa_nha_hang);
+router.get("/layDsNhaHang", lay_ds_nha_hang);
+
+// Restful Api Danh Mục
+router.post("/themDanhMuc", them_danh_muc);
+router.put("/capNhatDanhMuc/:id", cap_nhat_danh_muc);
+router.delete("/xoaDanhMuc/:id", xoa_danh_muc);
+router.get("/layDsDanhMuc", lay_ds_danh_muc);
+
+// Restful Api Món Ăn
+router.post("/themMonAn", upload.single("anhMonAn"), them_mon_an);
+router.put("/capNhatMonAn/:id", upload.single("anhMonAn"), cap_nhat_mon_an);
+router.delete("/xoaMonAn/:id", xoa_mon_an);
+router.get("/layDsMonAn", lay_ds_mon_an);
+
+// Restful Api Nhân Viên
+router.post("/themNhanVien", upload.single("hinhAnh"), them_nhan_vien);
+router.put(
+  "/capNhatNhanVien/:id",
+  upload.single("hinhAnh"),
+  cap_nhat_nhan_vien
+);
+router.delete("/xoaNhaVien/:id", xoa_nhan_vien);
+router.get("/layDsNhaVien", lay_ds_nhan_vien);
+
+// Restful Api Khu Vực
+router.post("/themKhuVuc", them_khu_vuc);
+router.put("/capNhatKhuVuc/:id", cap_nhat_khu_vuc);
+router.delete("/xoaKhuVuc/:id", xoa_khu_vuc);
+router.get("/layDsKhuVuc", lay_ds_khu_vuc);
+
+// Restful Api Bàn
+router.post("/themBan", them_ban);
+router.put("/capNhatBan/:id", cap_nhat_ban);
+router.delete("/xoaBan/:id", xoa_ban);
+router.get("/layDsBan", lay_ds_ban);
+
+// Restful Api Nhóm Topping
+router.post("/themNhomTopping", them_nhom_topping);
+router.put("/capNhatNhomTopping/:id", cap_nhat_nhom_topping);
+router.delete("/xoaNhomTopping/:id", xoa_nhom_topping);
+router.get("/layDsNhomTopping", lay_ds_nhom_topping);
+
+// Restful Api Topping
+router.post("/themTopping", them_topping);
+router.put("/capNhatTopping/:id", cap_nhat_topping);
+router.delete("/xoaTopping/:id", xoa_topping);
+router.get("/layDsTopping", lay_ds_topping);
+
+// Restful Api Chi Tiết Hóa Đơn
+router.post("/themChiTietHoaDon", them_chi_tiet_hoa_don);
+router.put("/capNhatChiTietHoaDon/:id", cap_nhat_chi_tiet_hoa_don);
+router.delete("/xoaChiTietHoaDon/:id", xoa_chi_tiet_hoa_don);
+router.get("/layDsChiTietHoaDon", lay_ds_chi_tiet_hoa_don);
+
+// Restful Api Hóa Đơn
+router.post("/themHoaDon", them_hoa_don);
+router.put("/capNhatHoaDon/:id", cap_nhat_hoa_don);
+router.delete("/xoaHoaDon/:id", xoa_hoa_don);
+router.get("/layDsHoaDon", lay_ds_hoa_don);
 
 module.exports = router;

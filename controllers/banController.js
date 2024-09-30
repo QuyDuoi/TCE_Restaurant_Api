@@ -1,0 +1,91 @@
+const { Ban } = require("../models/banModel");
+const { KhuVuc } = require("../models/khuVucModel");
+
+// Thêm bàn
+exports.them_ban = async (req, res, next) => {
+  try {
+    const { tenBan, sucChua, trangThai, id_khuVuc } = req.body;
+
+    // Kiểm tra xem khu vực có tồn tại không
+    const khuVuc = await KhuVuc.findById(id_khuVuc);
+    if (!khuVuc) {
+      return res.status(404).json({ msg: "Khu vực không tồn tại" });
+    }
+
+    // Tạo bàn mới
+    const ban = new Ban({ tenBan, sucChua, trangThai, id_khuVuc });
+    const result = await ban.save();
+
+    res.status(201).json(result);
+  } catch (error) {
+    res.status(400).json({ msg: error.message });
+  }
+};
+
+// Cập nhật bàn
+exports.cap_nhat_ban = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { tenBan, sucChua, trangThai, id_khuVuc } = req.body;
+
+    // Tìm bàn theo ID
+    const ban = await Ban.findById(id);
+    if (!ban) {
+      return res.status(404).json({ msg: "Bàn không tồn tại" });
+    }
+
+    // Kiểm tra xem khu vực mới có tồn tại không
+    const khuVuc = await KhuVuc.findById(id_khuVuc);
+    if (!khuVuc) {
+      return res.status(404).json({ msg: "Khu vực không tồn tại" });
+    }
+
+    // Cập nhật thông tin của bàn
+    ban.tenBan = tenBan;
+    ban.sucChua = sucChua;
+    ban.trangThai = trangThai;
+    ban.id_khuVuc = id_khuVuc;
+
+    const result = await ban.save();
+
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(400).json({ msg: error.message });
+  }
+};
+
+// Xóa bàn
+exports.xoa_ban = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    // Xóa bàn theo ID
+    const ban = await Ban.findByIdAndDelete(id);
+    if (!ban) {
+      return res.status(404).json({ msg: "Bàn không tồn tại" });
+    }
+
+    res.status(200).json({ msg: "Đã xóa bàn" });
+  } catch (error) {
+    res.status(400).json({ msg: error.message });
+  }
+};
+
+// Lấy danh sách bàn theo khu vực
+exports.lay_ds_ban = async (req, res, next) => {
+  try {
+    const { id_khuVuc } = req.query;
+
+    // Lọc bàn theo khu vực nếu có
+    let filter = {};
+    if (id_khuVuc) {
+      filter.id_khuVuc = id_khuVuc;
+    }
+
+    const bans = await Ban.find(filter).populate("id_khuVuc").sort({ createdAt: -1 });
+
+    res.status(200).json(bans);
+  } catch (error) {
+    res.status(400).json({ msg: error.message });
+  }
+};

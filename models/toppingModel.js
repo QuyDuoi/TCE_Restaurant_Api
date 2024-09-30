@@ -12,5 +12,5 @@ const toppingModel = new mongoose.Schema(
         timestamps: true
     }
 );
-let Topping = mongoose.model("Topping",toppingModel);
+let Topping = mongoose.model("Topping", toppingModel);
 module.exports = {Topping}
