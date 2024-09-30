@@ -24,7 +24,7 @@ const hoaDonSchema = new mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "ChiTietHoaDon",
-        required: true,
+        required: false,
       },
     ],
   },
