@@ -3,9 +3,9 @@ const { KhuVuc } = require("../models/khuVucModel");
 // Thêm khu vực
 exports.them_khu_vuc = async (req, res, next) => {
   try {
-    const { tenKhuVuc, id_cuaHang } = req.body;
+    const { tenKhuVuc, id_nhaHang } = req.body;
 
-    const khuVuc = new KhuVuc({ tenKhuVuc, id_cuaHang });
+    const khuVuc = new KhuVuc({ tenKhuVuc, id_nhaHang });
     const result = await khuVuc.save();
 
     res.status(201).json(result);
@@ -18,7 +18,7 @@ exports.them_khu_vuc = async (req, res, next) => {
 exports.cap_nhat_khu_vuc = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { tenKhuVuc, id_cuaHang } = req.body;
+    const { tenKhuVuc, id_nhaHang } = req.body;
 
     const khuVuc = await KhuVuc.findById(id);
     if (!khuVuc) {
@@ -26,7 +26,7 @@ exports.cap_nhat_khu_vuc = async (req, res, next) => {
     }
 
     khuVuc.tenKhuVuc = tenKhuVuc;
-    khuVuc.id_cuaHang = id_cuaHang;
+    khuVuc.id_nhaHang = id_nhaHang;
 
     const result = await khuVuc.save();
 
@@ -55,9 +55,9 @@ exports.xoa_khu_vuc = async (req, res, next) => {
 // Lấy danh sách khu vực
 exports.lay_ds_khu_vuc = async (req, res, next) => {
   try {
-    const { id_cuaHang } = req.query;
+    const { id_nhaHang } = req.query;
 
-    const khuVucs = await KhuVuc.find({ id_cuaHang }).sort({ createdAt: -1 });
+    const khuVucs = await KhuVuc.find({ id_nhaHang }).sort({ createdAt: -1 });
 
     res.status(200).json(khuVucs);
   } catch (error) {
