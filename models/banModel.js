@@ -6,7 +6,7 @@ const banSchema = new mongoose.Schema(
     sucChua: { type: String, required: true },
     trangThai: {
       type: String,
-      enum: ["Trống", "Đang sử dụng"],
+      enum: ["Trống", "Đang sử dụng","Đã đặt"],
       default: "Trống",
     },
     id_khuVuc: { type: mongoose.Schema.Types.ObjectId, ref: "KhuVuc", required: true },
