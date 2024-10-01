@@ -40,11 +40,21 @@ exports.cap_nhat_ban = async (req, res, next) => {
       return res.status(404).json({ msg: "Khu vực không tồn tại" });
     }
 
-    // Cập nhật thông tin của bàn
-    ban.tenBan = tenBan;
-    ban.sucChua = sucChua;
-    ban.trangThai = trangThai;
-    ban.id_khuVuc = id_khuVuc;
+  
+    // Kiểm tra và cập nhật thông tin bàn nếu có thay đổi
+    if (tenBan !== undefined && tenBan !== ban.tenBan) {
+      ban.tenBan = tenBan;
+    }
+    if (sucChua !== undefined && sucChua !== ban.sucChua) {
+      ban.sucChua = sucChua;
+    }
+    if (trangThai !== undefined && trangThai !== ban.trangThai) {
+      ban.trangThai = trangThai;
+    }
+    if (id_khuVuc !== undefined && id_khuVuc !== ban.id_khuVuc) {
+      ban.id_khuVuc = id_khuVuc;
+    }
+
 
     const result = await ban.save();
 

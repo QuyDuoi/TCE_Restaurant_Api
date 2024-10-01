@@ -46,17 +46,28 @@ exports.cap_nhat_mon_an = async (req, res, next) => {
     // Nếu có file ảnh mới thì cập nhật đường dẫn ảnh
     if (req.file) {
       anhMonAn = `${req.protocol}://${req.get("host")}/public/uploads/${req.file.filename}`;
+      monAn.anhMonAn = anhMonAn;
     }
 
-    // Cập nhật các thông tin của món ăn
-    monAn.tenMon = tenMon;
-    monAn.moTa = moTa;
-    monAn.giaMonAn = giaMonAn;
-    monAn.trangThai = trangThai;
-    monAn.id_danhMuc = id_danhMuc;
-    monAn.id_nhomTopping = id_nhomTopping;
-    monAn.anhMonAn = anhMonAn || monAn.anhMonAn;
-
+    // Kiểm tra và cập nhật các thông tin của món ăn nếu có thay đổi
+    if (tenMon !== undefined && tenMon !== monAn.tenMon) {
+      monAn.tenMon = tenMon;
+    }
+    if (moTa !== undefined && moTa !== monAn.moTa) {
+      monAn.moTa = moTa;
+    }
+    if (giaMonAn !== undefined && giaMonAn !== monAn.giaMonAn) {
+      monAn.giaMonAn = giaMonAn;
+    }
+    if (trangThai !== undefined && trangThai !== monAn.trangThai) {
+      monAn.trangThai = trangThai;
+    }
+    if (id_danhMuc !== undefined && id_danhMuc !== monAn.id_danhMuc) {
+      monAn.id_danhMuc = id_danhMuc;
+    }
+    if (id_nhomTopping !== undefined && id_nhomTopping !== monAn.id_nhomTopping) {
+      monAn.id_nhomTopping = id_nhomTopping;
+    }
     // Lưu cập nhật món ăn
     const result = await monAn.save();
 
@@ -88,6 +99,7 @@ exports.lay_ds_mon_an = async (req, res, next) => {
   try {
     const { id_danhMuc, id_nhomTopping } = req.query;
 
+    
     // Tìm món ăn theo danh mục hoặc nhóm topping (nếu có)
     let filter = {};
     if (id_danhMuc) filter.id_danhMuc = id_danhMuc;

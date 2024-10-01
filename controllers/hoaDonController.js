@@ -47,13 +47,27 @@ exports.cap_nhat_hoa_don = async (req, res, next) => {
       return res.status(404).json({ msg: "Hóa đơn không tồn tại" });
     }
 
-    hoaDon.tongGiaTri = tongGiaTri;
-    hoaDon.tienGiamGia = tienGiamGia;
-    hoaDon.ghiChu = ghiChu;
-    hoaDon.trangThai = trangThai;
-    hoaDon.id_nhanVien = id_nhanVien;
-    hoaDon.id_ban = id_ban;
-    hoaDon.id_chiTietHoaDon = id_chiTietHoaDon;
+    if (tongGiaTri !== undefined && tongGiaTri !== hoaDon.tongGiaTri) {
+      hoaDon.tongGiaTri = tongGiaTri;
+    }
+    if (tienGiamGia !== undefined && tienGiamGia !== hoaDon.tienGiamGia) {
+      hoaDon.tienGiamGia = tienGiamGia;
+    }
+    if (ghiChu !== undefined && ghiChu !== hoaDon.ghiChu) {
+      hoaDon.ghiChu = ghiChu;
+    }
+    if (trangThai !== undefined && trangThai !== hoaDon.trangThai) {
+      hoaDon.trangThai = trangThai;
+    }
+    if (id_nhanVien !== undefined && id_nhanVien !== hoaDon.id_nhanVien) {
+      hoaDon.id_nhanVien = id_nhanVien;
+    }
+    if (id_ban !== undefined && id_ban !== hoaDon.id_ban) {
+      hoaDon.id_ban = id_ban;
+    }
+    if (id_chiTietHoaDon !== undefined && id_chiTietHoaDon !== hoaDon.id_chiTietHoaDon) {
+      hoaDon.id_chiTietHoaDon = id_chiTietHoaDon;
+    }
 
     const result = await hoaDon.save();
 

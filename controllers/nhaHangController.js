@@ -1,4 +1,4 @@
-const { NhaHang } = require("../models/nhaHangModel");
+const {NhaHang} = require('../models/nhaHangModel');
 
 // Thêm nhà hàng với hình ảnh
 exports.them_nha_hang = async (req, res, next) => {
@@ -18,8 +18,8 @@ exports.them_nha_hang = async (req, res, next) => {
       return res.status(400).json({ msg: "nhà hàng đã tồn tại" });
     }
 
-    const cuaHang = new NhaHang({ tenNhaHang, soDienThoai, diaChi, hinhAnh });
-    const result = await cuaHang.save();
+    const nhaHang = new NhaHang({ tenNhaHang, soDienThoai, diaChi, hinhAnh });
+    const result = await nhaHang.save();
 
     res.status(201).json(result);
   } catch (error) {
@@ -32,25 +32,41 @@ exports.cap_nhat_nha_hang = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { tenNhaHang, soDienThoai, diaChi } = req.body;
+    console.log(req.body)
     let hinhAnh = "";
+
 
     // Kiểm tra nhà hàng có tồn tại không
     const store = await NhaHang.findById(id);
+    
     if (!store) {
       return res.status(404).json({ msg: "Nhà hàng không tồn tại" });
     }
 
     // Kiểm tra nếu nhà hàng mới đã tồn tại (ngoại trừ nhà hàng hiện tại)
-    const existingStore = await CuaHang.findOne({ tenNhaHang });
+    const existingStore = await NhaHang.findOne({ tenNhaHang });
     if (existingStore && existingStore._id.toString() !== id) {
       return res.status(400).json({ msg: "Nhà hàng đã tồn tại" });
     }
 
     // Cập nhật các thuộc tính của nhà hàng
+   // Chỉ cập nhật các thuộc tính nếu chúng được truyền vào
+   if (tenNhaHang) {
     store.tenNhaHang = tenNhaHang;
-    store.soDienThoai = soDienThoai;
-    store.diaChi = diaChi;
+  }
 
+  if (soDienThoai) {
+    store.soDienThoai = soDienThoai;
+  }
+
+  if (diaChi) {
+    store.diaChi = diaChi;
+  }
+
+  // Cập nhật đường dẫn hình ảnh nếu có file mới được tải lên
+  if (req.file) {
+    hinhAnh = `${req.protocol}://${req.get("host")}/public/uploads/${req.file.filename}`;
+  }
     // Cập nhật đường dẫn hình ảnh nếu có file mới được tải lên
     if (req.file) {
       hinhAnh = `${req.protocol}://${req.get("host")}/public/uploads/${
@@ -72,7 +88,7 @@ exports.xoa_nha_hang = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const store = await CuaHang.findByIdAndDelete(id);
+    const store = await NhaHang.findByIdAndDelete(id);
     if (!store) {
       return res.status(404).json({ msg: "Nhà hàng không tồn tại" });
     }

@@ -40,7 +40,9 @@ exports.cap_nhat_nhom_topping = async (req, res, next) => {
     }
 
     // Cập nhật nhóm topping
+   if(tenNhomTopping !== undefined || tenNhomTopping !== nhomTopping.tenNhomTopping){
     nhomTopping.tenNhomTopping = tenNhomTopping;
+   }
 
     const result = await nhomTopping.save();
 

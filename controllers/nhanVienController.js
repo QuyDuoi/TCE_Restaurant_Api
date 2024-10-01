@@ -7,9 +7,8 @@ exports.them_nhan_vien = async (req, res, next) => {
     let hinhAnh = "";
 
     if (req.file) {
-      hinhAnh = `${req.protocol}://${req.get("host")}/public/uploads/${
-        req.file.filename
-      }`;
+      hinhAnh = `${req.protocol}://${req.get("host")}/public/uploads/${req.file.filename
+        }`;
     }
 
     const nhanVien = new NhanVien({
@@ -40,16 +39,25 @@ exports.cap_nhat_nhan_vien = async (req, res, next) => {
     }
 
     if (req.file) {
-      hinhAnh = `${req.protocol}://${req.get("host")}/public/uploads/${
-        req.file.filename
-      }`;
+      hinhAnh = `${req.protocol}://${req.get("host")}/public/uploads/${req.file.filename
+        }`;
+      nhanVien.hinhAnh = hinhAnh || nhanVien.hinhAnh;
     }
 
-    nhanVien.hoTen = hoTen;
-    nhanVien.soDienThoai = soDienThoai;
-    nhanVien.cccd = cccd;
-    nhanVien.vaiTro = vaiTro;
-    nhanVien.hinhAnh = hinhAnh || nhanVien.hinhAnh;
+    // Kiểm tra và cập nhật thông tin nhân viên nếu có thay đổi
+    if (hoTen !== undefined && hoTen !== nhanVien.hoTen) {
+      nhanVien.hoTen = hoTen;
+    }
+    if (soDienThoai !== undefined && soDienThoai !== nhanVien.soDienThoai) {
+      nhanVien.soDienThoai = soDienThoai;
+    }
+    if (cccd !== undefined && cccd !== nhanVien.cccd) {
+      nhanVien.cccd = cccd;
+    }
+    if (vaiTro !== undefined && vaiTro !== nhanVien.vaiTro) {
+      nhanVien.vaiTro = vaiTro;
+    }
+
 
     const result = await nhanVien.save();
 

@@ -35,10 +35,18 @@ exports.cap_nhat_chi_tiet_hoa_don = async (req, res) => {
     }
 
     // Cập nhật các thông tin của chi tiết hóa đơn
-    chiTietHoaDon.soLuongMon = soLuongMon;
-    chiTietHoaDon.giaTien = giaTien;
-    chiTietHoaDon.id_monAn = id_monAn;
-  
+   
+    // Kiểm tra và cập nhật thông tin nếu có thay đổi
+    if (soLuongMon !== undefined && soLuongMon !== chiTietHoaDon.soLuongMon) {
+      chiTietHoaDon.soLuongMon = soLuongMon;
+    }
+    if (giaTien !== undefined && giaTien !== chiTietHoaDon.giaTien) {
+      chiTietHoaDon.giaTien = giaTien;
+    }
+    if (id_monAn !== undefined && id_monAn !== chiTietHoaDon.id_monAn) {
+      chiTietHoaDon.id_monAn = id_monAn;
+    }
+
     const result = await chiTietHoaDon.save();
 
     res.status(200).json(result);
@@ -65,10 +73,10 @@ exports.xoa_chi_tiet_hoa_don = async (req, res, next) => {
 
 // Lấy danh sách chi tiết hóa đơn
 exports.lay_ds_chi_tiet_hoa_don = async (req, res, next) => {
-  
   try {
-
-    const chiTietHoaDons = await ChiTietHoaDon.find(filter)
+    const {id} = req.params;
+    console.log(id)
+    const chiTietHoaDons = await ChiTietHoaDon.findById(id)
       .populate("id_monAn")
       .sort({ createdAt: -1 });
     res.status(200).json(chiTietHoaDons);

@@ -30,10 +30,18 @@ exports.cap_nhat_topping = async (req, res, next) => {
       return res.status(404).json({ msg: "Topping không tồn tại" });
     }
 
-    topping.tenTopping = tenTopping;
-    topping.giaTopping = giaTopping;
-    topping.trangThai = trangThai;
-    topping.id_nhomTopping = id_nhomTopping;
+    if (tenTopping !== undefined && tenTopping !== topping.tenTopping) {
+      topping.tenTopping = tenTopping;
+    }
+    if (giaTopping !== undefined && giaTopping !== topping.giaTopping) {
+      topping.giaTopping = giaTopping;
+    }
+    if (trangThai !== undefined && trangThai !== topping.trangThai) {
+      topping.trangThai = trangThai;
+    }
+    if (id_nhomTopping !== undefined && id_nhomTopping !== topping.id_nhomTopping) {
+      topping.id_nhomTopping = id_nhomTopping;
+    }
 
     const result = await topping.save();
 

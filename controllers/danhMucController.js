@@ -29,6 +29,7 @@ exports.cap_nhat_danh_muc = async (req, res, next) => {
     const { tenDanhMuc, id_nhaHang } = req.body;
 
     // Kiểm tra danh mục có tồn tại cho cửa hàng này không
+    console.log(id,"--",req.body)
     const danhMuc = await DanhMuc.findOne({ _id: id, id_nhaHang });
     if (!danhMuc) {
       return res
@@ -44,7 +45,9 @@ exports.cap_nhat_danh_muc = async (req, res, next) => {
         .json({ msg: "Danh mục đã tồn tại cho cửa hàng này" });
     }
 
-    danhMuc.tenDanhMuc = tenDanhMuc;
+    if(tenDanhMuc){
+      danhMuc.tenDanhMuc = tenDanhMuc;
+    }
     const result = await danhMuc.save();
 
     res.status(200).json(result);
@@ -76,7 +79,10 @@ exports.xoa_danh_muc = async (req, res, next) => {
 exports.lay_ds_danh_muc = async (req, res, next) => {
   try {
     const { id_nhaHang } = req.query;
-
+  // Kiểm tra id_nhaHang có được truyền không
+  if (!id_nhaHang) {
+    return res.status(400).json({ msg: "Thiếu id_nhaHang" });
+  }
     const danhMucs = await DanhMuc.find({ id_nhaHang }).sort({
       createdAt: -1,
     });

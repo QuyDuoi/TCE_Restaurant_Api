@@ -24,9 +24,13 @@ exports.cap_nhat_khu_vuc = async (req, res, next) => {
     if (!khuVuc) {
       return res.status(404).json({ msg: "Khu vực không tồn tại" });
     }
-
+  // Kiểm tra và cập nhật thông tin khu vực nếu có thay đổi
+  if (tenKhuVuc !== undefined && tenKhuVuc !== khuVuc.tenKhuVuc) {
     khuVuc.tenKhuVuc = tenKhuVuc;
+  }
+  if (id_nhaHang !== undefined && id_nhaHang !== khuVuc.id_nhaHang) {
     khuVuc.id_nhaHang = id_nhaHang;
+  }
 
     const result = await khuVuc.save();
 
