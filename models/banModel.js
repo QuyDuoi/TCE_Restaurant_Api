@@ -9,6 +9,7 @@ const banSchema = new mongoose.Schema(
       enum: ["Trống", "Đang sử dụng","Đã đặt"],
       default: "Trống",
     },
+    ghiChu: { type: String, required: false },
     id_khuVuc: { type: mongoose.Schema.Types.ObjectId, ref: "KhuVuc", required: true },
   },
   {

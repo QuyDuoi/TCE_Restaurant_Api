@@ -4,7 +4,7 @@ const { KhuVuc } = require("../models/khuVucModel");
 // Thêm bàn
 exports.them_ban = async (req, res, next) => {
   try {
-    const { tenBan, sucChua, trangThai, id_khuVuc } = req.body;
+    const { tenBan, sucChua, trangThai, ghiChu, id_khuVuc } = req.body;
 
     // Kiểm tra xem khu vực có tồn tại không
     const khuVuc = await KhuVuc.findById(id_khuVuc);
@@ -13,7 +13,7 @@ exports.them_ban = async (req, res, next) => {
     }
 
     // Tạo bàn mới
-    const ban = new Ban({ tenBan, sucChua, trangThai, id_khuVuc });
+    const ban = new Ban({ tenBan, sucChua, trangThai, ghiChu, id_khuVuc });
     const result = await ban.save();
 
     res.status(201).json(result);
@@ -26,7 +26,7 @@ exports.them_ban = async (req, res, next) => {
 exports.cap_nhat_ban = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { tenBan, sucChua, trangThai, id_khuVuc } = req.body;
+    const { tenBan, sucChua, trangThai,ghiChu, id_khuVuc } = req.body;
 
     // Tìm bàn theo ID
     const ban = await Ban.findById(id);
@@ -50,6 +50,9 @@ exports.cap_nhat_ban = async (req, res, next) => {
     }
     if (trangThai !== undefined && trangThai !== ban.trangThai) {
       ban.trangThai = trangThai;
+    }
+    if (ghiChu !== undefined && ghiChu !== ban.ghiChu) {
+      ban.ghiChu = ghiChu;
     }
     if (id_khuVuc !== undefined && id_khuVuc !== ban.id_khuVuc) {
       ban.id_khuVuc = id_khuVuc;
