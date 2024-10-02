@@ -3,7 +3,7 @@ const { NhanVien } = require("../models/nhanVienModel");
 // Thêm nhân viên với hình ảnh
 exports.them_nhan_vien = async (req, res, next) => {
   try {
-    const { hoTen, soDienThoai, cccd, vaiTro } = req.body;
+    const { hoTen, soDienThoai, cccd, vaiTro, id_nhaHang } = req.body;
     let hinhAnh = "";
 
     if (req.file) {
@@ -17,6 +17,7 @@ exports.them_nhan_vien = async (req, res, next) => {
       soDienThoai,
       cccd,
       vaiTro,
+      id_nhaHang,
     });
     const result = await nhanVien.save();
 
@@ -30,7 +31,7 @@ exports.them_nhan_vien = async (req, res, next) => {
 exports.cap_nhat_nhan_vien = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { hoTen, soDienThoai, cccd, vaiTro } = req.body;
+    const { hoTen, soDienThoai, cccd, vaiTro, id_nhaHang } = req.body;
     let hinhAnh = "";
 
     const nhanVien = await NhanVien.findById(id);
@@ -56,6 +57,9 @@ exports.cap_nhat_nhan_vien = async (req, res, next) => {
     }
     if (vaiTro !== undefined && vaiTro !== nhanVien.vaiTro) {
       nhanVien.vaiTro = vaiTro;
+    }
+    if (id_nhaHang !== undefined && id_nhaHang !== nhanVien.id_nhaHang) {
+      nhanVien.id_nhaHang = id_nhaHang; 
     }
 
 
