@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const upload = require("../config/upload");
 
+// Controllers
 const {
   them_nha_hang,
   cap_nhat_nha_hang,
@@ -72,6 +73,27 @@ const {
   lay_ds_hoa_don,
 } = require("../controllers/hoaDonController");
 
+const {
+  them_ca_lam_viec,
+  cap_nhat_ca_lam_viec,
+  xoa_ca_lam_viec,
+  lay_ds_ca_lam_viec,
+} = require("../controllers/caLamViecController");
+
+const {
+  them_thu,
+  cap_nhat_thu,
+  xoa_thu,
+  lay_ds_thu,
+} = require("../controllers/thuController");
+
+const {
+  them_chi,
+  cap_nhat_chi,
+  xoa_chi,
+  lay_ds_chi,
+} = require("../controllers/chiController");
+
 // Restful Api Cửa hàng
 router.post("/themNhaHang", upload.single("hinhAnh"), them_nha_hang);
 router.put("/capNhatNhaHang/:id", upload.single("hinhAnh"), cap_nhat_nha_hang);
@@ -92,11 +114,7 @@ router.get("/layDsMonAn", lay_ds_mon_an);
 
 // Restful Api Nhân Viên
 router.post("/themNhanVien", upload.single("hinhAnh"), them_nhan_vien);
-router.put(
-  "/capNhatNhanVien/:id",
-  upload.single("hinhAnh"),
-  cap_nhat_nhan_vien
-);
+router.put("/capNhatNhanVien/:id", upload.single("hinhAnh"), cap_nhat_nhan_vien);
 router.delete("/xoaNhaVien/:id", xoa_nhan_vien);
 router.get("/layDsNhaVien", lay_ds_nhan_vien);
 
@@ -135,5 +153,23 @@ router.post("/themHoaDon", them_hoa_don);
 router.put("/capNhatHoaDon/:id", cap_nhat_hoa_don);
 router.delete("/xoaHoaDon/:id", xoa_hoa_don);
 router.get("/layDsHoaDon", lay_ds_hoa_don);
+
+// Restful Api Ca Làm Việc
+router.post("/themCaLamViec", them_ca_lam_viec);
+router.put("/capNhatCaLamViec/:id", cap_nhat_ca_lam_viec);
+router.delete("/xoaCaLamViec/:id", xoa_ca_lam_viec);
+router.get("/layDsCaLamViec", lay_ds_ca_lam_viec);
+
+// Restful Api Thu
+router.post("/themThu", them_thu);
+router.put("/capNhatThu/:id", cap_nhat_thu);
+router.delete("/xoaThu/:id", xoa_thu);
+router.get("/layDsThu", lay_ds_thu);
+
+// Restful Api Chi
+router.post("/themChi", them_chi);
+router.put("/capNhatChi/:id", cap_nhat_chi);
+router.delete("/xoaChi/:id", xoa_chi);
+router.get("/layDsChi", lay_ds_chi);
 
 module.exports = router;
