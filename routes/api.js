@@ -71,6 +71,8 @@ const {
   cap_nhat_hoa_don,
   xoa_hoa_don,
   lay_ds_hoa_don,
+  thongKeHinhThucThanhToan,
+  thongKeDoanhThuTheoNguon,
 } = require("../controllers/hoaDonController");
 
 const {
@@ -94,6 +96,14 @@ const {
   lay_ds_chi,
 } = require("../controllers/chiController");
 
+const {
+  thongKeDoanhThu
+} = require("../controllers/doanhThuController");
+
+const {
+  lay_top_5_mon_an_ban_chay
+} = require("../controllers/thongKeTop5Controller");
+
 // Restful Api Cửa hàng
 router.post("/themNhaHang", upload.single("hinhAnh"), them_nha_hang);
 router.put("/capNhatNhaHang/:id", upload.single("hinhAnh"), cap_nhat_nha_hang);
@@ -115,7 +125,7 @@ router.get("/layDsMonAn", lay_ds_mon_an);
 // Restful Api Nhân Viên
 router.post("/themNhanVien", upload.single("hinhAnh"), them_nhan_vien);
 router.put("/capNhatNhanVien/:id", upload.single("hinhAnh"), cap_nhat_nhan_vien);
-router.delete("/xoaNhaVien/:id", xoa_nhan_vien);
+router.delete("/xoaNhanVien/:id", xoa_nhan_vien);
 router.get("/layDsNhaVien", lay_ds_nhan_vien);
 
 // Restful Api Khu Vực
@@ -171,5 +181,17 @@ router.post("/themChi", them_chi);
 router.put("/capNhatChi/:id", cap_nhat_chi);
 router.delete("/xoaChi/:id", xoa_chi);
 router.get("/layDsChi", lay_ds_chi);
+
+// Restful Api Thống Kê Doanh Thu
+router.get("/thongKeDoanhThu", thongKeDoanhThu);
+
+// Restful Api Thống Kê Top 5 Món Ăn
+router.get("/top5MatHangBanChay", lay_top_5_mon_an_ban_chay);
+
+// // Restful Api Thống Kê Hình Thức Thanh Toán
+router.get("/thongKeHinhThucThanhToan", thongKeHinhThucThanhToan);
+
+// Restful Api Thống Kê Doanh Thu Theo Nguồn
+router.get("/thongKeDoanhThuTheoNguon", thongKeDoanhThuTheoNguon);
 
 module.exports = router;

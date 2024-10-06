@@ -103,3 +103,71 @@ exports.lay_ds_hoa_don = async (req, res, next) => {
     res.status(400).json({ msg: error.message });
   }
 };
+// Hình Thức Thanh toán
+
+exports.thongKeHinhThucThanhToan = async (req, res, next) => {
+  try {
+    const { startDate, endDate } = req.query; // Lấy ngày bắt đầu và kết thúc từ query
+
+    const thongKe = await HoaDon.aggregate([
+      {
+        $match: {
+          createdAt: {
+            $gte: new Date(startDate), // Ngày bắt đầu
+            $lte: new Date(endDate) // Ngày kết thúc
+          }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            hinhThucThanhToan: "$hinhThucThanhToan", // Nhóm theo hình thức thanh toán
+            ngay: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } } // Nhóm theo ngày
+          },
+          tongSoHoaDon: { $sum: 1 }, // Tính tổng số hóa đơn
+          tongGiaTri: { $sum: "$tongGiaTri" } // Tính tổng giá trị thanh toán
+        }
+      },
+      {
+        $sort: { "_id.ngay": 1 } // Sắp xếp theo ngày
+      }
+    ]);
+
+    res.status(200).json(thongKe);
+  } catch (error) {
+    res.status(400).json({ msg: error.message });
+  }
+};
+// Thống kê doanh  thu theo nguồn
+exports.thongKeDoanhThuTheoNguon = async (req, res, next) => {
+  try {
+    const { startDate, endDate } = req.query; // Lấy ngày bắt đầu và kết thúc từ query
+
+    const thongKe = await HoaDon.aggregate([
+      {
+        $match: {
+          createdAt: {
+            $gte: new Date(startDate), // Ngày bắt đầu
+            $lte: new Date(endDate) // Ngày kết thúc
+          }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            nguon: "$nguon", // Nhóm theo nguồn (mang đi hoặc ăn tại chỗ)
+            ngay: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } } // Nhóm theo ngày
+          },
+          tongDoanhThu: { $sum: "$tongGiaTri" } // Tính tổng doanh thu
+        }
+      },
+      {
+        $sort: { "_id.ngay": 1 } // Sắp xếp theo ngày
+      }
+    ]);
+
+    res.status(200).json(thongKe);
+  } catch (error) {
+    res.status(400).json({ msg: error.message });
+  }
+};
