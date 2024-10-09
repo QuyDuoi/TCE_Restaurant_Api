@@ -1,46 +1,70 @@
+
 const { HoaDon } = require("../models/hoaDonModel");
-const moment = require("moment"); // Đảm bảo đã cài đặt thư viện moment
-
-exports.thongKeDoanhThu = async (req, res, next) => {
+exports.thongKeTongDoanhThu = async (req, res, next) => {
   try {
-    const { startDate, endDate } = req.query;
+    let { type } = req.query; // type có thể là 'today', '7days', '30days', 'custom'
+    if (!type) {
+      type = 'today'; // Mặc định là hôm nay nếu không truyền type
+    }
+    let startDate, endDate;
 
-    let start, end;
+    // Xác định ngày bắt đầu và kết thúc dựa trên loại thống kê
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Thiết lập thời gian bắt đầu của ngày hôm nay
 
-    if (!startDate || !endDate) {
-      // Mặc định là hôm nay nếu không có tham số
-      start = moment().startOf('day'); // 00:00 ngày hôm nay
-      end = moment().endOf('day');     // 23:59 ngày hôm nay
-    } else {
-      // Parse ngày bắt đầu và kết thúc từ query
-      start = moment(startDate).startOf('day');
-      end = moment(endDate).endOf('day');
+    switch (type) {
+      case 'today':
+        startDate = new Date(today);
+        endDate = new Date(today);
+        endDate.setHours(23, 59, 59, 999); // Kết thúc ngày hôm nay
+        break;
+        case 'yesterday':
+          startDate = new Date(today);
+          startDate.setDate(startDate.getDate() - 1); // Ngày hôm qua
+          endDate = new Date(startDate);
+          endDate.setHours(23, 59, 59, 999); // Kết thúc ngày hôm qua
+          break;
+      case '7days':
+        startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 6); // Bắt đầu từ 7 ngày trước
+        endDate = new Date(today);
+        endDate.setHours(23, 59, 59, 999); // Kết thúc vào cuối ngày hôm nay
+        break;
+      case '30days':
+        startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 29); // Bắt đầu từ 30 ngày trước
+        endDate = new Date(today);
+        endDate.setHours(23, 59, 59, 999); // Kết thúc vào cuối ngày hôm nay
+        break;
+      case 'custom':
+        startDate = new Date(req.query.startDate);
+        endDate = new Date(req.query.endDate);
+        if (!startDate || !endDate) {
+          return res.status(400).json({ msg: "Cần cung cấp ngày bắt đầu và kết thúc cho loại thống kê tùy chỉnh" });
+        }
+        break;
+      default:
+        return res.status(400).json({ msg: "Loại thống kê không hợp lệ" });
     }
 
-    // Aggregate query để tính doanh thu
-    const result = await HoaDon.aggregate([
+    const thongKe = await HoaDon.aggregate([
       {
         $match: {
-          trangThai: "Đã Thanh Toán",
           createdAt: {
-            $gte: start.toDate(), // Lớn hơn hoặc bằng ngày bắt đầu
-            $lte: end.toDate()    // Nhỏ hơn hoặc bằng ngày kết thúc
+            $gte: startDate,
+            $lte: endDate
           }
         }
       },
       {
         $group: {
-          _id: null,
-          tongDoanhThu: { $sum: "$tongGiaTri" }
+          _id: null, // Nhóm tất cả kết quả lại với nhau
+          tongDoanhThu: { $sum: "$tongGiaTri" } // Tính tổng giá trị thanh toán
         }
       }
     ]);
 
-    if (result.length > 0) {
-      res.status(200).json({ doanhThu: result[0].tongDoanhThu });
-    } else {
-      res.status(200).json({ doanhThu: 0 });
-    }
+    res.status(200).json(thongKe);
   } catch (error) {
     res.status(400).json({ msg: error.message });
   }
