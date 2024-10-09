@@ -7,7 +7,7 @@ exports.lay_top_5_mon_an_ban_chay = async (req, res, next) => {
       {
         $group: {
           _id: "$id_monAn", // Nhóm theo id món ăn
-          tongSoLuong: { $sum: "$soLuong" } // Tính tổng số lượng bán của từng món
+          tongSoLuong: { $sum: "$soLuongMon" } // Tính tổng số lượng món ăn bán ra (dựa trên soLuongMon)
         }
       },
       {

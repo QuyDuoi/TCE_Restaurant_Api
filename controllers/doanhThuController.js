@@ -1,24 +1,47 @@
-const DoanhThu = require('../models/doanhThuModel'); // Mô hình doanh thu
+const { HoaDon } = require("../models/hoaDonModel");
+const moment = require("moment"); // Đảm bảo đã cài đặt thư viện moment
 
-exports.thongKeDoanhThu = async (req, res) => {
-  const { startDate, endDate } = req.query;
-
+exports.thongKeDoanhThu = async (req, res, next) => {
   try {
-    // Lấy các giao dịch trong khoảng thời gian được cung cấp
-    const doanhThus = await DoanhThu.find({
-      ngay: { $gte: new Date(startDate), $lte: new Date(endDate) },
-    });
+    const { startDate, endDate } = req.query;
 
-    // Tính tổng doanh thu
-    const tongDoanhThu = doanhThus.reduce((acc, doanhthu) => acc + doanhthu.soTien, 0);
+    let start, end;
 
-    // Trả kết quả về cho người dùng
-    res.status(200).json({
-      tongDoanhThu,
-      soLuongGiaoDich: doanhThus.length,
-      doanhThus,
-    });
+    if (!startDate || !endDate) {
+      // Mặc định là hôm nay nếu không có tham số
+      start = moment().startOf('day'); // 00:00 ngày hôm nay
+      end = moment().endOf('day');     // 23:59 ngày hôm nay
+    } else {
+      // Parse ngày bắt đầu và kết thúc từ query
+      start = moment(startDate).startOf('day');
+      end = moment(endDate).endOf('day');
+    }
+
+    // Aggregate query để tính doanh thu
+    const result = await HoaDon.aggregate([
+      {
+        $match: {
+          trangThai: "Đã Thanh Toán",
+          createdAt: {
+            $gte: start.toDate(), // Lớn hơn hoặc bằng ngày bắt đầu
+            $lte: end.toDate()    // Nhỏ hơn hoặc bằng ngày kết thúc
+          }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          tongDoanhThu: { $sum: "$tongGiaTri" }
+        }
+      }
+    ]);
+
+    if (result.length > 0) {
+      res.status(200).json({ doanhThu: result[0].tongDoanhThu });
+    } else {
+      res.status(200).json({ doanhThu: 0 });
+    }
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi khi lấy thống kê doanh thu' });
+    res.status(400).json({ msg: error.message });
   }
 };
