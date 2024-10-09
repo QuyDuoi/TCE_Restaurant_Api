@@ -9,6 +9,9 @@ exports.them_ca_lam_viec = async (req, res, next) => {
       ketThuc,
       soDuBanDau,
       soDuHienTai,
+      tongTienMat,
+      tongChuyenKhoan,
+      tongDoanhThu,
       tongThu,
       tongChi,
       id_nhanVien
@@ -26,6 +29,9 @@ exports.them_ca_lam_viec = async (req, res, next) => {
       ketThuc,
       soDuBanDau,
       soDuHienTai,
+      tongTienMat,
+      tongChuyenKhoan,
+      tongDoanhThu,
       tongThu,
       tongChi,
       id_nhanVien
@@ -48,6 +54,9 @@ exports.cap_nhat_ca_lam_viec = async (req, res, next) => {
       ketThuc,
       soDuBanDau,
       soDuHienTai,
+      tongTienMat,
+      tongChuyenKhoan,
+      tongDoanhThu,
       tongThu,
       tongChi,
       id_nhanVien
@@ -69,10 +78,13 @@ exports.cap_nhat_ca_lam_viec = async (req, res, next) => {
     }
 
     // Cập nhật các thông tin khác nếu có thay đổi
-    if (batDau !== undefined) caLamViec.batDau = batDau;
-    if (ketThuc !== undefined) caLamViec.ketThuc = ketThuc;
-    if (soDuBanDau !== undefined) caLamViec.soDuBanDau = soDuBanDau;
-    if (soDuHienTai !== undefined) caLamViec.soDuHienTai = soDuHienTai;
+    if (batDau !== undefined && caLamViec.batDau != batDau) caLamViec.batDau = batDau;
+    if (ketThuc !== undefined && caLamViec.ketThuc != ketThuc) caLamViec.ketThuc = ketThuc;
+    if (soDuBanDau !== undefined && caLamViec.soDuBanDau != soDuBanDau) caLamViec.soDuBanDau = soDuBanDau;
+    if (soDuHienTai !== undefined && caLamViec.soDuHienTai != soDuHienTai) caLamViec.soDuHienTai = soDuHienTai;
+    if (tongTienMat !== undefined && caLamViec.tongTienMat != tongTienMat) caLamViec.tongTienMat = tongTienMat;
+    if (tongChuyenKhoan !== undefined && caLamViec.tongChuyenKhoan != tongChuyenKhoan) caLamViec.tongChuyenKhoan = tongChuyenKhoan;
+    if (tongDoanhThu !== undefined && caLamViec.tongDoanhThu != tongDoanhThu) caLamViec.tongDoanhThu = tongDoanhThu;
     if (tongThu !== undefined) caLamViec.tongThu = tongThu;
     if (tongChi !== undefined) caLamViec.tongChi = tongChi;
 

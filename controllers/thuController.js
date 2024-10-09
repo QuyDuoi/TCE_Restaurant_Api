@@ -49,8 +49,8 @@ exports.cap_nhat_thu = async (req, res, next) => {
     }
 
     // Cập nhật các thông tin khác nếu có thay đổi
-    if (soTienThu !== undefined) thu.soTienThu = soTienThu;
-    if (moTa !== undefined) thu.moTa = moTa;
+    if (soTienThu !== undefined && thu.soTienThu != soTienThu) thu.soTienThu = soTienThu;
+    if (moTa !== undefined && thu.moTa != moTa) thu.moTa = moTa;
 
     const result = await thu.save();
 
@@ -77,23 +77,22 @@ exports.xoa_thu = async (req, res, next) => {
   }
 };
 
-// Lấy danh sách khoản thu theo ca làm việc
+// Lấy danh sách khu vực
 exports.lay_ds_thu = async (req, res, next) => {
   try {
     const { id_caLamViec } = req.query;
-
-    // Lọc khoản thu theo ca làm việc nếu có
-    let filter = {};
+    
+    // Xây dựng điều kiện truy vấn dựa trên có hoặc không có id_caLamViec
+    let query = {};
     if (id_caLamViec) {
-      filter.id_caLamViec = id_caLamViec;
+      query.id_caLamViec = id_caLamViec;
     }
 
-    const thus = await Thu.find(filter)
-      .populate("id_caLamViec")
-      .sort({ createdAt: -1 });
+    const thus = await Thu.find(query).sort({ createdAt: -1 });
 
     res.status(200).json(thus);
   } catch (error) {
     res.status(400).json({ msg: error.message });
   }
 };
+
