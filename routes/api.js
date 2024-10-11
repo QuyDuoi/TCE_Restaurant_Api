@@ -97,7 +97,9 @@ const {
 } = require("../controllers/chiController");
 
 const {
-  thongKeDoanhThu
+ 
+  thongKeTongDoanhThu
+
 } = require("../controllers/doanhThuController");
 
 const {
@@ -183,7 +185,11 @@ router.delete("/xoaChi/:id", xoa_chi);
 router.get("/layDsChi", lay_ds_chi);
 
 // Restful Api Thống Kê Doanh Thu
-router.get("/thongKeDoanhThu", thongKeDoanhThu);
+router.get("/thongKeDoanhThu", thongKeTongDoanhThu);
+
+
+
+
 
 // Restful Api Thống Kê Top 5 Món Ăn
 router.get("/top5MatHangBanChay", lay_top_5_mon_an_ban_chay);

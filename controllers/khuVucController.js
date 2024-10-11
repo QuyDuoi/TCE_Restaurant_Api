@@ -61,7 +61,13 @@ exports.lay_ds_khu_vuc = async (req, res, next) => {
   try {
     const { id_nhaHang } = req.query;
 
-    const khuVucs = await KhuVuc.find({ id_nhaHang }).sort({ createdAt: -1 });
+
+    let filter = {};
+    if(id_nhaHang){
+      filter.id_nhaHang = id_nhaHang;
+    }
+
+    const khuVucs = await KhuVuc.find( filter ).sort({ createdAt: -1 });
 
     res.status(200).json(khuVucs);
   } catch (error) {

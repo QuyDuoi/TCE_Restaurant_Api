@@ -7,7 +7,7 @@ exports.lay_top_5_mon_an_ban_chay = async (req, res, next) => {
       {
         $group: {
           _id: "$id_monAn", // Nhóm theo id món ăn
-          tongSoLuong: { $sum: "$soLuong" } // Tính tổng số lượng bán của từng món
+          tongSoLuong: { $sum: "$soLuongMon" } // Tính tổng số lượng món ăn bán ra
         }
       },
       {
@@ -18,7 +18,7 @@ exports.lay_top_5_mon_an_ban_chay = async (req, res, next) => {
       },
       {
         $lookup: {
-          from: "MonAn", // Tham chiếu sang bảng Món Ăn
+          from: "MonAn", // Tham chiếu đến bảng Món Ăn, sử dụng tên chính xác của collection
           localField: "_id",
           foreignField: "_id",
           as: "monAn"
@@ -26,6 +26,13 @@ exports.lay_top_5_mon_an_ban_chay = async (req, res, next) => {
       },
       {
         $unwind: "$monAn" // Trả về chi tiết món ăn
+      },
+      {
+        $project: {
+          _id: 0,
+          tenMonAn: "$monAn.tenMon", // Sử dụng đúng tên đầu ra từ $lookup
+          tongSoLuong: 1
+        }
       }
     ]);
 
