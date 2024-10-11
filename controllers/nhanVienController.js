@@ -90,7 +90,7 @@ exports.xoa_nhan_vien = async (req, res, next) => {
 // Lấy danh sách nhân viên
 exports.lay_ds_nhan_vien = async (req, res, next) => {
   try {
-    const nhanViens = await NhanVien.find().sort({ createdAt: -1 });
+    const nhanViens = await NhanVien.find().sort({ createdAt: -1 }).populate('id_nhaHang');
 
     res.status(200).json(nhanViens);
   } catch (error) {

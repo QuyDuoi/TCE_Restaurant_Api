@@ -7,6 +7,7 @@ const nhanVienSchema = new mongoose.Schema(
     soDienThoai: { type: String, required: true },
     cccd: { type: String, required: true },
     vaiTro: {type: String, enum: ["Quản lý", "Nhân viên thu ngân", "Nhân viên phục vụ"], default: "Nhân viên phục vụ"},
+    trangThai: {type: Boolean, default: true},
     id_nhaHang: {type: mongoose.Schema.Types.ObjectId,ref: "NhaHang",require: true,},
   },
   {
