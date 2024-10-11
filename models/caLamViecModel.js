@@ -3,7 +3,7 @@ const { mongoose } = require("../config/db");
 const caLamViecSchema = new mongoose.Schema(
   {
     batDau: { type: Date, required: true }, 
-    ketThuc: { type: Date, required: true },  
+    ketThuc: { type: Date, required: false },  
     soDuBanDau: {type: String, required: true } ,
     soDuHienTai: {type: String, required: true } ,
     tongTienMat: {type: String, required: true } ,

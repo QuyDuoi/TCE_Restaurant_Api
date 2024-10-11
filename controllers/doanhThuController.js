@@ -61,6 +61,12 @@ exports.thongKeTongDoanhThu = async (req, res, next) => {
           _id: null, // Nhóm tất cả kết quả lại với nhau
           tongDoanhThu: { $sum: "$tongGiaTri" } // Tính tổng giá trị thanh toán
         }
+      },
+      {
+        $project:{
+          _id:0,
+          tongDoanhThu: 1 // Giữ trường tongDoanhThu
+        }
       }
     ]);
 
