@@ -71,8 +71,7 @@ const {
   cap_nhat_hoa_don,
   xoa_hoa_don,
   lay_ds_hoa_don,
-  thongKeHinhThucThanhToan,
-  thongKeDoanhThuTheoNguon,
+ 
 } = require("../controllers/hoaDonController");
 
 const {
@@ -96,15 +95,14 @@ const {
   lay_ds_chi,
 } = require("../controllers/chiController");
 
-const {
- 
-  thongKeTongDoanhThu
-
-} = require("../controllers/doanhThuController");
 
 const {
-  lay_top_5_mon_an_ban_chay
-} = require("../controllers/thongKeTop5Controller");
+  lay_top_5_mon_an_ban_chay,
+  thong_ke_hinh_thuc_thanh_toan,
+  thongKeTongDoanhThu,
+  thongKeDoanhThuTheoNguon
+  
+} = require("../controllers/thongKeController");
 
 // Restful Api Cửa hàng
 router.post("/themNhaHang", upload.single("hinhAnh"), them_nha_hang);
@@ -187,15 +185,11 @@ router.get("/layDsChi", lay_ds_chi);
 // Restful Api Thống Kê Doanh Thu
 router.get("/thongKeDoanhThu", thongKeTongDoanhThu);
 
-
-
-
-
 // Restful Api Thống Kê Top 5 Món Ăn
 router.get("/top5MatHangBanChay", lay_top_5_mon_an_ban_chay);
 
 // // Restful Api Thống Kê Hình Thức Thanh Toán
-router.get("/thongKeHinhThucThanhToan", thongKeHinhThucThanhToan);
+router.get("/thongKeHinhThucThanhToan", thong_ke_hinh_thuc_thanh_toan);
 
 // Restful Api Thống Kê Doanh Thu Theo Nguồn
 router.get("/thongKeDoanhThuTheoNguon", thongKeDoanhThuTheoNguon);

@@ -5,21 +5,41 @@ exports.them_hoa_don = async (req, res, next) => {
   try {
     const {
       tongGiaTri,
+      trangThai,
       tienGiamGia,
       ghiChu,
+      hinhThucThanhToan,
+      thoiGianVaoBan,
+      thoiGianRaBan,
       id_nhanVien,
       id_ban,
       id_chiTietHoaDon,
+      id_caLamViec,
     } = req.body;
 
+ 
+    
     const hoaDon = new HoaDon({
       tongGiaTri,
+      trangThai,
       tienGiamGia,
       ghiChu,
+      hinhThucThanhToan,
+      thoiGianVaoBan,
+      thoiGianRaBan,
       id_nhanVien,
       id_ban,
       id_chiTietHoaDon,
+      id_caLamViec,
     });
+    
+    if (id_ban !== undefined) {
+      if (id_ban === "") {
+        hoaDon.id_ban = null; // Xử lý trường hợp id_ban là chuỗi rỗng
+      } else if (id_ban !== hoaDon.id_ban) {
+        hoaDon.id_ban = id_ban;
+      }
+    }
     const result = await hoaDon.save();
 
     res.status(201).json(result);
@@ -34,12 +54,16 @@ exports.cap_nhat_hoa_don = async (req, res, next) => {
     const { id } = req.params;
     const {
       tongGiaTri,
+      trangThai,
       tienGiamGia,
       ghiChu,
-      trangThai,
+      hinhThucThanhToan,
+      thoiGianVaoBan,
+      thoiGianRaBan,
       id_nhanVien,
       id_ban,
       id_chiTietHoaDon,
+      id_caLamViec,
     } = req.body;
 
     const hoaDon = await HoaDon.findById(id);
@@ -50,20 +74,32 @@ exports.cap_nhat_hoa_don = async (req, res, next) => {
     if (tongGiaTri !== undefined && tongGiaTri !== hoaDon.tongGiaTri) {
       hoaDon.tongGiaTri = tongGiaTri;
     }
+    if (trangThai !== undefined && trangThai !== hoaDon.trangThai) {
+      hoaDon.trangThai = trangThai;
+    }
     if (tienGiamGia !== undefined && tienGiamGia !== hoaDon.tienGiamGia) {
       hoaDon.tienGiamGia = tienGiamGia;
     }
     if (ghiChu !== undefined && ghiChu !== hoaDon.ghiChu) {
       hoaDon.ghiChu = ghiChu;
     }
-    if (trangThai !== undefined && trangThai !== hoaDon.trangThai) {
-      hoaDon.trangThai = trangThai;
+    if (hinhThucThanhToan !== undefined && hinhThucThanhToan !== hoaDon.hinhThucThanhToan) {
+      hoaDon.hinhThucThanhToan = hinhThucThanhToan;
+    }
+    if (thoiGianVaoBan !== undefined && thoiGianVaoBan !== hoaDon.thoiGianVaoBan) {
+      hoaDon.thoiGianVaoBan = thoiGianVaoBan;
+    }
+    if (thoiGianRaBan !== undefined && thoiGianRaBan !== hoaDon.thoiGianRaBan) {
+      hoaDon.thoiGianRaBan = thoiGianRaBan;
     }
     if (id_nhanVien !== undefined && id_nhanVien !== hoaDon.id_nhanVien) {
       hoaDon.id_nhanVien = id_nhanVien;
     }
     if (id_ban !== undefined && id_ban !== hoaDon.id_ban) {
       hoaDon.id_ban = id_ban;
+    }
+    if (id_caLamViec !== undefined && id_caLamViec !== hoaDon.id_caLamViec) {
+      hoaDon.id_caLamViec = id_caLamViec;
     }
     if (id_chiTietHoaDon !== undefined && id_chiTietHoaDon !== hoaDon.id_chiTietHoaDon) {
       hoaDon.id_chiTietHoaDon = id_chiTietHoaDon;
@@ -99,74 +135,6 @@ exports.lay_ds_hoa_don = async (req, res, next) => {
     const hoaDons = await HoaDon.find().sort({ createdAt: -1 });
 
     res.status(200).json(hoaDons);
-  } catch (error) {
-    res.status(400).json({ msg: error.message });
-  }
-};
-// Hình Thức Thanh toán
-
-exports.thongKeHinhThucThanhToan = async (req, res, next) => {
-  try {
-    const { startDate, endDate } = req.query; // Lấy ngày bắt đầu và kết thúc từ query
-
-    const thongKe = await HoaDon.aggregate([
-      {
-        $match: {
-          createdAt: {
-            $gte: new Date(startDate), // Ngày bắt đầu
-            $lte: new Date(endDate) // Ngày kết thúc
-          }
-        }
-      },
-      {
-        $group: {
-          _id: {
-            hinhThucThanhToan: "$hinhThucThanhToan", // Nhóm theo hình thức thanh toán
-            ngay: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } } // Nhóm theo ngày
-          },
-          tongSoHoaDon: { $sum: 1 }, // Tính tổng số hóa đơn
-          tongGiaTri: { $sum: "$tongGiaTri" } // Tính tổng giá trị thanh toán
-        }
-      },
-      {
-        $sort: { "_id.ngay": 1 } // Sắp xếp theo ngày
-      }
-    ]);
-
-    res.status(200).json(thongKe);
-  } catch (error) {
-    res.status(400).json({ msg: error.message });
-  }
-};
-// Thống kê doanh  thu theo nguồn
-exports.thongKeDoanhThuTheoNguon = async (req, res, next) => {
-  try {
-    const { startDate, endDate } = req.query; // Lấy ngày bắt đầu và kết thúc từ query
-
-    const thongKe = await HoaDon.aggregate([
-      {
-        $match: {
-          createdAt: {
-            $gte: new Date(startDate), // Ngày bắt đầu
-            $lte: new Date(endDate) // Ngày kết thúc
-          }
-        }
-      },
-      {
-        $group: {
-          _id: {
-            nguon: "$nguon", // Nhóm theo nguồn (mang đi hoặc ăn tại chỗ)
-            ngay: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } } // Nhóm theo ngày
-          },
-          tongDoanhThu: { $sum: "$tongGiaTri" } // Tính tổng doanh thu
-        }
-      },
-      {
-        $sort: { "_id.ngay": 1 } // Sắp xếp theo ngày
-      }
-    ]);
-
-    res.status(200).json(thongKe);
   } catch (error) {
     res.status(400).json({ msg: error.message });
   }
