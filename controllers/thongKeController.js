@@ -280,7 +280,73 @@ exports.thong_ke_hinh_thuc_thanh_toan = async (req, res, next) => {
 };
 
 
-exports.thongKeDoanhThuTheoNguon = async(req,res,next)=>{
-  
-}
+exports.thongKeDoanhThuTheoNguon = async (req, res, next) => {
+  try {
+    let { type, id_ban } = req.query; // type có thể là 'today','yesterday', '7days', '30days', 'custom'
 
+    if (id_ban === "" || id_ban === undefined) {
+      id_ban = null;
+    }
+    if (!type) {
+      type = 'today'; // Mặc định là hôm nay nếu không truyền type
+    }
+    let startDate, endDate;
+
+    // Xác định ngày bắt đầu và kết thúc dựa trên loại thống kê
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Thiết lập thời gian bắt đầu của ngày hôm nay
+
+    switch (type) {
+      case 'today':
+        startDate = new Date(today);
+        endDate = new Date(today);
+        endDate.setHours(23, 59, 59, 999); // Kết thúc ngày hôm nay
+        break;
+      case 'yesterday':
+        startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 1); // Ngày hôm qua
+        endDate = new Date(startDate);
+        endDate.setHours(23, 59, 59, 999); // Kết thúc ngày hôm qua
+        break;
+      case '7days':
+        startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 6); // Bắt đầu từ 7 ngày trước
+        endDate = new Date(today);
+        endDate.setHours(23, 59, 59, 999); // Kết thúc vào cuối ngày hôm nay
+        break;
+      case '30days':
+        startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 29); // Bắt đầu từ 30 ngày trước
+        endDate = new Date(today);
+        endDate.setHours(23, 59, 59, 999); // Kết thúc vào cuối ngày hôm nay
+        break;
+      case 'lastMonth':
+        const firstDayLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1); // Ngày đầu tiên của tháng trước
+        const lastDayLastMonth = new Date(today.getFullYear(), today.getMonth(), 0); // Ngày cuối cùng của tháng trước
+        startDate = firstDayLastMonth;
+        endDate = lastDayLastMonth;
+        endDate.setHours(23, 59, 59, 999); // Đặt thời điểm cuối ngày
+        break;
+      case 'custom':
+        startDate = new Date(req.query.startDate);
+        endDate = new Date(req.query.endDate);
+        if (!startDate || !endDate) {
+          return res.status(400).json({ msg: "Cần cung cấp ngày bắt đầu và kết thúc cho loại thống kê tùy chỉnh" });
+        }
+        break;
+      default:
+        return res.status(400).json({ msg: "Loại thống kê không hợp lệ" });
+    }
+    console.log('id_ban', id_ban)
+
+    const thongKeNguon = await HoaDon.aggregate([
+      
+    ]);
+
+    res.status(200).json(thongKeNguon);
+
+
+  } catch (error) {
+    res.status(400).json({ msg: error.message });
+  }
+};
