@@ -10,9 +10,9 @@ const hoaDonSchema = new mongoose.Schema(
     },
     tienGiamGia: { type: Number, required: true },
     ghiChu: { type: String, required: false },
-    hinhThucThanhToan: {type: Boolean, require: true},
-    thoiGianVaoBan:{type:Date,require:false},
-    thoiGianRaBan:{type:Date,require:false},
+    hinhThucThanhToan: { type: Boolean, require: true },
+    thoiGianVaoBan: { type: Date, require: false },
+    thoiGianRaBan: { type: Date, require: false },
     id_nhanVien: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "NhanVien",
@@ -31,13 +31,11 @@ const hoaDonSchema = new mongoose.Schema(
       },
     ],
 
-    id_caLamViec: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "CaLamViec",
-        required: false,
-      },
-    ]
+    id_caLamViec: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "CaLamViec",
+      required: false,
+    },
   },
   {
     collection: "HoaDon",
