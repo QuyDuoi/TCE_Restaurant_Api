@@ -284,12 +284,18 @@ exports.thongKeDoanhThuTheoNguon = async (req, res, next) => {
   try {
     let { type, id_ban } = req.query; // type có thể là 'today','yesterday', '7days', '30days', 'custom'
 
+    // Nếu id_ban rỗng hoặc undefined thì giả định là đơn mua mang đi
     if (id_ban === "" || id_ban === undefined) {
       id_ban = null;
+    } else if (id_ban === "1") {
+      id_ban = 1; // Thống kê tất cả các đơn ăn tại nhà hàng (liên quan đến bàn)
     }
+    
+    // Kiểm tra type
     if (!type) {
       type = 'today'; // Mặc định là hôm nay nếu không truyền type
     }
+    
     let startDate, endDate;
 
     // Xác định ngày bắt đầu và kết thúc dựa trên loại thống kê
@@ -337,15 +343,30 @@ exports.thongKeDoanhThuTheoNguon = async (req, res, next) => {
       default:
         return res.status(400).json({ msg: "Loại thống kê không hợp lệ" });
     }
-    console.log('id_ban', id_ban)
 
+    // Truy vấn thống kê dựa trên id_ban
     const thongKeNguon = await HoaDon.aggregate([
-      
+      {
+        $match: {
+          createdAt: { $gte: startDate, $lte: endDate }, // Lọc các hóa đơn theo ngày
+          id_ban: id_ban === 1 ? { $ne: null } : null // Nếu id_ban là 1, lọc hóa đơn có id_ban khác null (ăn tại nhà hàng)
+        }
+      },
+      {
+        $group: {
+          _id: null, // Nhóm tất cả các hóa đơn lại với nhau
+          tongDoanhThu: { $sum: "$tongGiaTri" } // Tính tổng giá trị của tất cả các hóa đơn
+        }
+      },
+      {
+        $project: {
+          _id: 0, // Không hiển thị trường _id trong kết quả
+          tongDoanhThu: 1 // Hiển thị chỉ tổng doanh thu
+        }
+      }
     ]);
 
     res.status(200).json(thongKeNguon);
-
-
   } catch (error) {
     res.status(400).json({ msg: error.message });
   }
