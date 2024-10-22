@@ -2,6 +2,7 @@ const { ChiTietHoaDon } = require("../models/chiTietHoaDonModel");
 const { HoaDon } = require("../models/hoaDonModel");
 
 //thongketong
+
 exports.thongKeTongDoanhThu = async (req, res, next) => {
   try {
     let { type } = req.query; // type có thể là 'today','yesterday', '7days', '30days', 'custom'
@@ -68,13 +69,15 @@ exports.thongKeTongDoanhThu = async (req, res, next) => {
       {
         $group: {
           _id: null, // Nhóm tất cả kết quả lại với nhau
-          tongDoanhThu: { $sum: "$tongGiaTri" } // Tính tổng giá trị thanh toán
+          tongDoanhThu: { $sum: "$tongGiaTri" }, // Tính tổng giá trị thanh toán
+          tongKhuyenMai : { $sum: "$tienGiamGia"}
         }
       },
       {
         $project: {
           _id: 0,
-          tongDoanhThu: 1 // Giữ trường tongDoanhThu
+          tongDoanhThu: 1, // Giữ trường tongDoanhThu
+          tongKhuyenMai: 1
         }
       }
     ]);
@@ -187,7 +190,7 @@ exports.lay_top_5_mon_an_ban_chay = async (req, res, next) => {
   }
 };
 
-
+//doi thanh tra ve tong tien mat va tong ck
 exports.thong_ke_hinh_thuc_thanh_toan = async (req, res, next) => {
   try {
     let { type, hinhThucThanhToan } = req.query; // type có thể là 'today','yesterday', '7days', '30days', 'custom'
@@ -249,30 +252,38 @@ exports.thong_ke_hinh_thuc_thanh_toan = async (req, res, next) => {
     }
     console.log('startDate', hinhThucThanhToan)
 
-    const thongKeHTTT = await HoaDon.aggregate([
+     // Lấy tổng Tiền Mặt và Chuyển Khoản
+     const thongKeHTTT = await HoaDon.aggregate([
       {
         $match: {
           createdAt: { $gte: startDate, $lte: endDate }, // Lọc các hóa đơn theo ngày
-          hinhThucThanhToan: hinhThucThanhToan // Giả sử bạn muốn thanh toán bằng tiền mặt (true), bạn có thể đặt điều kiện này dựa trên tham số truyền vào nếu cần
         }
       },
       {
         $group: {
           _id: null, // Nhóm tất cả các hóa đơn lại với nhau
-          tongDoanhThu: { $sum: "$tongGiaTri" } // Tính tổng giá trị của tất cả các hóa đơn
-
+          tongTienMat: {
+            $sum: {
+              $cond: [{ $eq: ["$hinhThucThanhToan", true] }, "$tongGiaTri", 0] // Tổng tiền mặt
+            }
+          },
+          tongChuyenKhoan: {
+            $sum: {
+              $cond: [{ $eq: ["$hinhThucThanhToan", false] }, "$tongGiaTri", 0] // Tổng chuyển khoản
+            }
+          }
         }
       },
       {
         $project: {
           _id: 0, // Không hiển thị trường _id trong kết quả
-          tongDoanhThu: 1 // Hiển thị chỉ tổng doanh thu
+          tongTienMat: 1,
+          tongChuyenKhoan: 1
         }
       }
     ]);
 
     res.status(200).json(thongKeHTTT);
-
 
   } catch (error) {
     res.status(400).json({ msg: error.message });
