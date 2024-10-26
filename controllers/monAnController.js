@@ -6,6 +6,7 @@ exports.them_mon_an = async (req, res, next) => {
     const { tenMon, moTa, giaMonAn, trangThai, id_danhMuc, id_nhomTopping } = req.body;
     let anhMonAn = "";
 
+    // Kiểm tra file tải lên
     if (req.file) {
       anhMonAn = `${req.protocol}://${req.get("host")}/public/uploads/${req.file.filename}`;
     }
@@ -24,17 +25,28 @@ exports.them_mon_an = async (req, res, next) => {
     // Lưu món ăn vào cơ sở dữ liệu
     const result = await monAn.save();
 
-    res.status(201).json(result);
+    res.status(201).json(result); // Trả về thông tin món ăn khi lưu thành công
   } catch (error) {
-    res.status(400).json({ msg: error.message });
+    // Log lỗi vào console để dễ dàng theo dõi
+    console.error("Error creating MonAn:", error);
+
+    // Phân loại lỗi để trả về thông tin chi tiết
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ msg: "Dữ liệu không hợp lệ", details: error.errors });
+    }
+    
+    // Nếu lỗi khác không xác định, trả về thông tin tổng quát hơn
+    res.status(500).json({ msg: "Lỗi khi thêm mới Món ăn", error: error.message });
   }
 };
+
 
 // Cập nhật món ăn với hình ảnh
 exports.cap_nhat_mon_an = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { tenMon, moTa, giaMonAn, trangThai, id_danhMuc, id_nhomTopping } = req.body;
+    const { tenMon, moTa, giaMonAn, trangThai, id_danhMuc, id_nhomTopping } =
+      req.body;
     let anhMonAn = "";
 
     // Tìm món ăn theo ID
@@ -45,7 +57,9 @@ exports.cap_nhat_mon_an = async (req, res, next) => {
 
     // Nếu có file ảnh mới thì cập nhật đường dẫn ảnh
     if (req.file) {
-      anhMonAn = `${req.protocol}://${req.get("host")}/public/uploads/${req.file.filename}`;
+      anhMonAn = `${req.protocol}://${req.get("host")}/public/uploads/${
+        req.file.filename
+      }`;
       monAn.anhMonAn = anhMonAn;
     }
 
@@ -65,7 +79,10 @@ exports.cap_nhat_mon_an = async (req, res, next) => {
     if (id_danhMuc !== undefined && id_danhMuc !== monAn.id_danhMuc) {
       monAn.id_danhMuc = id_danhMuc;
     }
-    if (id_nhomTopping !== undefined && id_nhomTopping !== monAn.id_nhomTopping) {
+    if (
+      id_nhomTopping !== undefined &&
+      id_nhomTopping !== monAn.id_nhomTopping
+    ) {
       monAn.id_nhomTopping = id_nhomTopping;
     }
     // Lưu cập nhật món ăn
@@ -73,7 +90,11 @@ exports.cap_nhat_mon_an = async (req, res, next) => {
 
     res.status(200).json(result);
   } catch (error) {
-    res.status(400).json({ msg: error.message });
+    console.error("Error updating MonAn:", error);
+  if (error.name === 'ValidationError') {
+    return res.status(400).json({ msg: "Validation error", details: error.errors });
+  }
+  res.status(500).json({ msg: "Internal server error", error: error.message });
   }
 };
 
@@ -90,7 +111,8 @@ exports.xoa_mon_an = async (req, res, next) => {
 
     res.status(200).json({ msg: "Đã xóa món ăn" });
   } catch (error) {
-    res.status(400).json({ msg: error.message });
+    console.error("Error deleting MonAn:", error);
+  res.status(500).json({ msg: "Internal server error", error: error.message });
   }
 };
 
@@ -99,16 +121,19 @@ exports.lay_ds_mon_an = async (req, res, next) => {
   try {
     const { id_danhMuc, id_nhomTopping } = req.query;
 
-    
     // Tìm món ăn theo danh mục hoặc nhóm topping (nếu có)
     let filter = {};
     if (id_danhMuc) filter.id_danhMuc = id_danhMuc;
     if (id_nhomTopping) filter.id_nhomTopping = id_nhomTopping;
 
-    const monAns = await MonAn.find(filter).sort({ createdAt: -1 }).populate("id_danhMuc").populate("id_nhomTopping");
+    const monAns = await MonAn.find(filter)
+      .sort({ createdAt: -1 })
+      .populate("id_danhMuc")
+      .populate("id_nhomTopping");
 
     res.status(200).json(monAns);
   } catch (error) {
-    res.status(400).json({ msg: error.message });
+    console.error("Error fetching MonAns:", error);
+  res.status(500).json({ msg: "Internal server error", error: error.message });
   }
 };
