@@ -104,6 +104,11 @@ const {
   
 } = require("../controllers/thongKeController");
 
+const {
+  addListChiTietHoaDon
+} = require("../controllers/listChiTietHoaDonController")
+
+
 // Restful Api Cửa hàng
 router.post("/themNhaHang", upload.single("hinhAnh"), them_nha_hang);
 router.put("/capNhatNhaHang/:id", upload.single("hinhAnh"), cap_nhat_nha_hang);
@@ -156,7 +161,7 @@ router.get("/layDsTopping", lay_ds_topping);
 router.post("/themChiTietHoaDon", them_chi_tiet_hoa_don);
 router.put("/capNhatChiTietHoaDon/:id", cap_nhat_chi_tiet_hoa_don);
 router.delete("/xoaChiTietHoaDon/:id", xoa_chi_tiet_hoa_don);
-router.get("/layDsChiTietHoaDon/:id", lay_ds_chi_tiet_hoa_don);
+router.get("/layDsChiTietHoaDon", lay_ds_chi_tiet_hoa_don);
 
 // Restful Api Hóa Đơn
 router.post("/themHoaDon", them_hoa_don);
@@ -193,5 +198,8 @@ router.get("/thongKeHinhThucThanhToan", thong_ke_hinh_thuc_thanh_toan);
 
 // Restful Api Thống Kê Doanh Thu Theo Nguồn
 router.get("/thongKeDoanhThuTheoNguon", thongKeDoanhThuTheoNguon);
+
+// Restful API List Chi Tiết Hoá Đơn
+router.post("/addListChiTietHoaDon",addListChiTietHoaDon)
 
 module.exports = router;
