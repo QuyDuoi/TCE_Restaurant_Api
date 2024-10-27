@@ -60,6 +60,7 @@ exports.thongKeTongDoanhThu = async (req, res, next) => {
     const thongKe = await HoaDon.aggregate([
       {
         $match: {
+          trangThai: "Đã Thanh Toán",
           createdAt: {
             $gte: startDate,
             $lte: endDate
@@ -148,6 +149,7 @@ exports.lay_top_5_mon_an_ban_chay = async (req, res, next) => {
     const topMonAn = await ChiTietHoaDon.aggregate([
       {
         $match: {
+          
           createdAt: { $gte: startDate, $lte: endDate } // Sử dụng trường createdAt cho việc lọc theo ngày
         }
       },
@@ -193,6 +195,7 @@ exports.lay_top_5_mon_an_ban_chay = async (req, res, next) => {
 //doi thanh tra ve tong tien mat va tong ck
 exports.thong_ke_hinh_thuc_thanh_toan = async (req, res, next) => {
   try {
+
     let { type, hinhThucThanhToan } = req.query; // type có thể là 'today','yesterday', '7days', '30days', 'custom'
 
     if (hinhThucThanhToan === "true") {
@@ -256,6 +259,7 @@ exports.thong_ke_hinh_thuc_thanh_toan = async (req, res, next) => {
      const thongKeHTTT = await HoaDon.aggregate([
       {
         $match: {
+          trangThai: "Đã Thanh Toán",
           createdAt: { $gte: startDate, $lte: endDate }, // Lọc các hóa đơn theo ngày
         }
       },
@@ -293,14 +297,9 @@ exports.thong_ke_hinh_thuc_thanh_toan = async (req, res, next) => {
 
 exports.thongKeDoanhThuTheoNguon = async (req, res, next) => {
   try {
-    let { type, id_ban } = req.query; // type có thể là 'today','yesterday', '7days', '30days', 'custom'
+    let { type } = req.query; // type có thể là 'today','yesterday', '7days', '30days', 'custom'
 
-    // Nếu id_ban rỗng hoặc undefined thì giả định là đơn mua mang đi
-    if (id_ban === "" || id_ban === undefined) {
-      id_ban = null;
-    } else if (id_ban === "1") {
-      id_ban = 1; // Thống kê tất cả các đơn ăn tại nhà hàng (liên quan đến bàn)
-    }
+  
     
     // Kiểm tra type
     if (!type) {
@@ -359,25 +358,35 @@ exports.thongKeDoanhThuTheoNguon = async (req, res, next) => {
     const thongKeNguon = await HoaDon.aggregate([
       {
         $match: {
-          createdAt: { $gte: startDate, $lte: endDate }, // Lọc các hóa đơn theo ngày
-          id_ban: id_ban === 1 ? { $ne: null } : null // Nếu id_ban là 1, lọc hóa đơn có id_ban khác null (ăn tại nhà hàng)
+          trangThai: "Đã Thanh Toán", // Chỉ tính hóa đơn đã thanh toán
+          createdAt: { $gte: startDate, $lte: endDate } // Lọc theo ngày
         }
       },
       {
         $group: {
-          _id: null, // Nhóm tất cả các hóa đơn lại với nhau
-          tongDoanhThu: { $sum: "$tongGiaTri" } // Tính tổng giá trị của tất cả các hóa đơn
-        }
-      },
-      {
-        $project: {
-          _id: 0, // Không hiển thị trường _id trong kết quả
-          tongDoanhThu: 1 // Hiển thị chỉ tổng doanh thu
+          _id: { 
+            banTaiCho: { $cond: { if: { $eq: ["$id_ban", null] }, then: "banMangDi", else: "banTaiCho" } } 
+          },
+          tongDoanhThu: { $sum: "$tongGiaTri" } // Tính tổng doanh thu
         }
       }
     ]);
 
-    res.status(200).json(thongKeNguon);
+    // Chuẩn hóa dữ liệu trả về
+    const result = {
+      banTaiCho: 0,
+      banMangDi: 0
+    };
+
+    thongKeNguon.forEach(item => {
+      if (item._id.banTaiCho === "banTaiCho") {
+        result.banTaiCho = item.tongDoanhThu;
+      } else if (item._id.banTaiCho === "banMangDi") {
+        result.banMangDi = item.tongDoanhThu;
+      }
+    });
+
+    res.status(200).json(result);
   } catch (error) {
     res.status(400).json({ msg: error.message });
   }
