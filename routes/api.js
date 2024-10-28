@@ -161,7 +161,7 @@ router.get("/layDsTopping", lay_ds_topping);
 router.post("/themChiTietHoaDon", them_chi_tiet_hoa_don);
 router.put("/capNhatChiTietHoaDon/:id", cap_nhat_chi_tiet_hoa_don);
 router.delete("/xoaChiTietHoaDon/:id", xoa_chi_tiet_hoa_don);
-router.get("/layDsChiTietHoaDon", lay_ds_chi_tiet_hoa_don);
+router.post("/layDsChiTietHoaDon", lay_ds_chi_tiet_hoa_don);
 
 // Restful Api Hóa Đơn
 router.post("/themHoaDon", them_hoa_don);
