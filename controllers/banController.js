@@ -115,9 +115,6 @@ exports.tim_kiem_ban = async (req, res, next) => {
 
     // Tìm các món ăn với tên khớp tiêu chí tìm kiếm
     const results = await Ban.find(searchCriteria);
-
-  
-    
     res.status(200).json(results);
   } catch (error) {
     res.status(400).json({ msg: error.message });
