@@ -112,3 +112,24 @@ exports.lay_ds_mon_an = async (req, res, next) => {
     res.status(400).json({ msg: error.message });
   }
 };
+
+
+exports.tim_kiem_mon_an = async (req, res, next) => {
+  try {
+    const { textSearch } = req.query;
+
+    // Kiểm tra nếu có từ khóa tìm kiếm và thiết lập tiêu chí tìm kiếm với regex
+    const searchCriteria = textSearch
+      ? { tenMon: { $regex: textSearch, $options: "i" } } // Tìm kiếm không phân biệt hoa thường
+      : {};
+
+    // Tìm các món ăn với tên khớp tiêu chí tìm kiếm
+    const results = await MonAn.find(searchCriteria);
+
+  
+    
+    res.status(200).json(results);
+  } catch (error) {
+    res.status(400).json({ msg: error.message });
+  }
+};
