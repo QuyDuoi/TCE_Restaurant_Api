@@ -4,7 +4,7 @@ const { MonAn } = require("../models/monAnModel");
 // Thêm chi tiết hóa đơn
 exports.them_chi_tiet_hoa_don = async (req, res, next) => {
   try {
-    const { soLuongMon, giaTien, id_monAn } = req.body;
+    const { soLuongMon,trangThai, giaTien, id_monAn } = req.body;
     // Kiểm tra xem món ăn có tồn tại hay không
     const monAn = await MonAn.findById(id_monAn);
 
@@ -13,7 +13,7 @@ exports.them_chi_tiet_hoa_don = async (req, res, next) => {
     }
 
     // Tạo chi tiết hóa đơn mới
-    const chiTietHoaDon = new ChiTietHoaDon({ soLuongMon, giaTien, id_monAn });
+    const chiTietHoaDon = new ChiTietHoaDon({ soLuongMon,trangThai, giaTien, id_monAn });
     const result = await chiTietHoaDon.save();
 
     res.status(201).json(result);
@@ -26,7 +26,7 @@ exports.them_chi_tiet_hoa_don = async (req, res, next) => {
 exports.cap_nhat_chi_tiet_hoa_don = async (req, res) => {
   try {
     const { id } = req.params;
-    const { soLuongMon, giaTien, id_monAn } = req.body;
+    const { soLuongMon,trangThai, giaTien, id_monAn } = req.body;
 
     // Tìm chi tiết hóa đơn theo ID
     const chiTietHoaDon = await ChiTietHoaDon.findById(id);
@@ -39,6 +39,9 @@ exports.cap_nhat_chi_tiet_hoa_don = async (req, res) => {
     // Kiểm tra và cập nhật thông tin nếu có thay đổi
     if (soLuongMon !== undefined && soLuongMon !== chiTietHoaDon.soLuongMon) {
       chiTietHoaDon.soLuongMon = soLuongMon;
+    }
+    if (trangThai !== undefined && trangThai !== chiTietHoaDon.trangThai) {
+      chiTietHoaDon.trangThai = trangThai;
     }
     if (giaTien !== undefined && giaTien !== chiTietHoaDon.giaTien) {
       chiTietHoaDon.giaTien = giaTien;
