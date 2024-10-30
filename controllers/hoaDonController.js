@@ -101,8 +101,13 @@ exports.cap_nhat_hoa_don = async (req, res, next) => {
     if (id_caLamViec !== undefined && id_caLamViec !== hoaDon.id_caLamViec) {
       hoaDon.id_caLamViec = id_caLamViec;
     }
-    if (id_chiTietHoaDon !== undefined && id_chiTietHoaDon !== hoaDon.id_chiTietHoaDon) {
-      hoaDon.id_chiTietHoaDon = id_chiTietHoaDon;
+       // Kiểm tra và thêm id mới vào id_chiTietHoaDon mà không trùng
+    if (id_chiTietHoaDon !== undefined) {
+      id_chiTietHoaDon.forEach(id => {
+        if (!hoaDon.id_chiTietHoaDon.includes(id)) {
+          hoaDon.id_chiTietHoaDon.push(id);
+        }
+      });
     }
 
     const result = await hoaDon.save();
