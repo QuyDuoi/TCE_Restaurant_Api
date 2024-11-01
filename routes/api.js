@@ -22,6 +22,7 @@ const {
   cap_nhat_mon_an,
   xoa_mon_an,
   lay_ds_mon_an,
+  tim_kiem_mon_an 
 } = require("../controllers/monAnController");
 
 const {
@@ -43,6 +44,7 @@ const {
   cap_nhat_ban,
   xoa_ban,
   lay_ds_ban,
+  tim_kiem_ban
 } = require("../controllers/banController");
 
 const {
@@ -126,6 +128,7 @@ router.post("/themMonAn", upload.single("anhMonAn"), them_mon_an);
 router.put("/capNhatMonAn/:id", upload.single("anhMonAn"), cap_nhat_mon_an);
 router.delete("/xoaMonAn/:id", xoa_mon_an);
 router.get("/layDsMonAn", lay_ds_mon_an);
+router.post("/timKiemMonAn", tim_kiem_mon_an);
 
 // Restful Api Nhân Viên
 router.post("/themNhanVien", upload.single("hinhAnh"), them_nhan_vien);
@@ -144,6 +147,7 @@ router.post("/themBan", them_ban);
 router.put("/capNhatBan/:id", cap_nhat_ban);
 router.delete("/xoaBan/:id", xoa_ban);
 router.get("/layDsBan", lay_ds_ban);
+router.post("/timKiemBan", tim_kiem_ban);
 
 // Restful Api Nhóm Topping
 router.post("/themNhomTopping", them_nhom_topping);
@@ -161,7 +165,7 @@ router.get("/layDsTopping", lay_ds_topping);
 router.post("/themChiTietHoaDon", them_chi_tiet_hoa_don);
 router.put("/capNhatChiTietHoaDon/:id", cap_nhat_chi_tiet_hoa_don);
 router.delete("/xoaChiTietHoaDon/:id", xoa_chi_tiet_hoa_don);
-router.get("/layDsChiTietHoaDon", lay_ds_chi_tiet_hoa_don);
+router.post("/layDsChiTietHoaDon", lay_ds_chi_tiet_hoa_don);
 
 // Restful Api Hóa Đơn
 router.post("/themHoaDon", them_hoa_don);
