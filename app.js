@@ -7,6 +7,7 @@ var logger = require("morgan");
 var indexRouter = require("./routes/index");
 const database = require("./config/db");
 var apiRouter = require("./routes/api");
+var authRouter = require("./routes/auth"); // Thêm dòng này
 
 var app = express();
 
@@ -27,6 +28,7 @@ app.use(
 
 app.use("/", indexRouter);
 app.use("/api", apiRouter);
+app.use("/api/auth", authRouter);
 database.connect();
 
 // catch 404 and forward to error handler

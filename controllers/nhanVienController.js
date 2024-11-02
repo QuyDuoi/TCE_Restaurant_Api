@@ -7,16 +7,15 @@ exports.them_nhan_vien = async (req, res, next) => {
     let hinhAnh = "";
 
     if (req.file) {
-      hinhAnh = `${req.protocol}://${req.get("host")}/public/uploads/${
-        req.file.filename
-      }`;
+      hinhAnh = `${req.protocol}://${req.get("host")}/public/uploads/${req.file.filename
+        }`;
     }
 
     // Kiểm tra nhân viên đã tồn tại hay chưa
     const existingNhanVien = await NhanVien.findOne({ hoTen, cccd });
     if (existingNhanVien) {
       console.log("Ton tai");
-      
+
       return res
         .status(400)
         .json({
@@ -108,14 +107,15 @@ exports.xoa_nhan_vien = async (req, res, next) => {
 };
 
 // Lấy danh sách nhân viên
-exports.lay_ds_nhan_vien = async (req, res, next) => {
-  try {
-    const nhanViens = await NhanVien.find()
-      .sort({ createdAt: -1 })
-      .populate("id_nhaHang");
+// exports.lay_ds_nhan_vien = async (req, res, next) => {
+//   try {
+//     const nhanViens = await NhanVien.find()
+//       .sort({ createdAt: -1 })
+//       .populate("id_nhaHang");
 
-    res.status(200).json(nhanViens);
-  } catch (error) {
-    res.status(400).json({ msg: error.message });
-  }
-};
+//     res.status(200).json(nhanViens);
+//   } catch (error) {
+//     res.status(400).json({ msg: error.message });
+//   }
+// };
+

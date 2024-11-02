@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const upload = require("../config/upload");
+const verifyToken = require("../Middleware/CheckTokenMiddleware");
 
 // Controllers
 const {
@@ -22,7 +23,7 @@ const {
   cap_nhat_mon_an,
   xoa_mon_an,
   lay_ds_mon_an,
-  tim_kiem_mon_an 
+  tim_kiem_mon_an
 } = require("../controllers/monAnController");
 
 const {
@@ -73,7 +74,7 @@ const {
   cap_nhat_hoa_don,
   xoa_hoa_don,
   lay_ds_hoa_don,
- 
+
 } = require("../controllers/hoaDonController");
 
 const {
@@ -103,7 +104,7 @@ const {
   thong_ke_hinh_thuc_thanh_toan,
   thongKeTongDoanhThu,
   thongKeDoanhThuTheoNguon
-  
+
 } = require("../controllers/thongKeController");
 
 const {
@@ -134,7 +135,8 @@ router.post("/timKiemMonAn", tim_kiem_mon_an);
 router.post("/themNhanVien", upload.single("hinhAnh"), them_nhan_vien);
 router.put("/capNhatNhanVien/:id", upload.single("hinhAnh"), cap_nhat_nhan_vien);
 router.delete("/xoaNhanVien/:id", xoa_nhan_vien);
-router.get("/layDsNhanVien", lay_ds_nhan_vien);
+// router.get("/layDsNhanVien", lay_ds_nhan_vien);
+router.get("/layDsNhanVien", verifyToken, lay_ds_nhan_vien);
 
 // Restful Api Khu Vực
 router.post("/themKhuVuc", them_khu_vuc);
@@ -204,6 +206,6 @@ router.get("/thongKeHinhThucThanhToan", thong_ke_hinh_thuc_thanh_toan);
 router.get("/thongKeDoanhThuTheoNguon", thongKeDoanhThuTheoNguon);
 
 // Restful API List Chi Tiết Hoá Đơn
-router.post("/addListChiTietHoaDon",addListChiTietHoaDon)
+router.post("/addListChiTietHoaDon", addListChiTietHoaDon)
 
 module.exports = router;
