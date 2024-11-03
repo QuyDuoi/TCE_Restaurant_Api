@@ -107,15 +107,15 @@ exports.xoa_nhan_vien = async (req, res, next) => {
 };
 
 // Lấy danh sách nhân viên
-// exports.lay_ds_nhan_vien = async (req, res, next) => {
-//   try {
-//     const nhanViens = await NhanVien.find()
-//       .sort({ createdAt: -1 })
-//       .populate("id_nhaHang");
+exports.lay_ds_nhan_vien = async (req, res, next) => {
+  try {
+    const nhanViens = await NhanVien.find()
+      .sort({ createdAt: -1 })
+      .populate("id_nhaHang");
 
-//     res.status(200).json(nhanViens);
-//   } catch (error) {
-//     res.status(400).json({ msg: error.message });
-//   }
-// };
+    res.status(200).json(nhanViens);
+  } catch (error) {
+    res.status(400).json({ msg: error.message });
+  }
+};
 

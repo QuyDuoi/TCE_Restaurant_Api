@@ -1,6 +1,24 @@
 // controllers/authController.js
 const { NhanVien } = require("../models/nhanVienModel");
 
+
+const checkPhoneNumber = async (req, res) => {
+    const { phoneNumber } = req.body;
+
+    try {
+        const nhanVien = await NhanVien.findOne({ soDienThoai: phoneNumber });
+        if (!nhanVien) {
+            return res.status(200).json({ statusError: "404", message: "Số điện thoại chưa được đăng ký, vui lòng liên hệ admin!!!" });
+        } else if (!nhanVien.trangThai) {
+            return res.status(200).json({ statusError: "403", message: "Tài khoản hiện tại đang bị vô hiệu hóa" });
+        }
+
+        return res.status(200).json({ message: "Số điện thoại hợp lệ. Tiếp tục gửi OTP." });
+    } catch (error) {
+        return res.status(500).json({ message: "Lỗi hệ thống: " + error.message });
+    }
+};
+
 // Hàm xử lý đăng nhập (được gọi sau middleware)
 const handleLogin = (req, res) => {
     try {
@@ -40,4 +58,4 @@ const handleRefreshToken = (req, res) => {
     }
 };
 
-module.exports = { handleLogin, handleRefreshToken };
+module.exports = { handleLogin, handleRefreshToken, checkPhoneNumber };

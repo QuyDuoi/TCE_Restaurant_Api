@@ -62,9 +62,9 @@ const authenticateFirebaseToken = async (req, res, next) => {
         const refreshToken = createRefreshToken(nhanVien);
 
         console.log('------------------ Access Token  ----------------');
-        console.log(idToken);
+        console.log(token);
         console.log('------------------ Refesh Token  ----------------');
-        console.log(idToken);
+        console.log(refreshToken);
 
 
 
