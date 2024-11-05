@@ -11,6 +11,7 @@ const khuVucSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    collection: "KhuVuc" // Đặt tên collection là "KhuVuc"
   }
 );
 let KhuVuc = mongoose.model("KhuVuc", khuVucSchema);

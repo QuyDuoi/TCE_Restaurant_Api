@@ -137,8 +137,10 @@ exports.xoa_hoa_don = async (req, res, next) => {
 // Lấy danh sách hóa đơn
 exports.lay_ds_hoa_don = async (req, res, next) => {
   try {
-    const { id_caLamViec } = req.params;
-    const hoaDons = await HoaDon.find( id_caLamViec ).sort({ createdAt: -1 });
+    const { id_caLamViec } = req.query;
+    console.log(id_caLamViec);
+    
+    const hoaDons = await HoaDon.find( {id_caLamViec} ).sort({ createdAt: -1 });
 
     res.status(200).json(hoaDons);
   } catch (error) {

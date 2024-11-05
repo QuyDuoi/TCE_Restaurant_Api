@@ -138,19 +138,26 @@ exports.lay_ds_mon_an = async (req, res, next) => {
   }
 };
 
-
 exports.tim_kiem_mon_an = async (req, res, next) => {
   try {
-    const { textSearch } = req.query;
+    const { textSearch, id_nhahang } = req.query;
 
-    // Thiết lập tiêu chí tìm kiếm với regex và trangThai: true
+    // Thiết lập tiêu chí tìm kiếm ban đầu
     const searchCriteria = {
-      trangThai: true, // Chỉ tìm kiếm món ăn còn bán
-      ...(textSearch ? { tenMon: { $regex: textSearch, $options: "i" } } : {})
+      trangThai: true,
+      ...(textSearch && { tenMon: { $regex: textSearch, $options: "i" } })
     };
 
-    // Tìm các món ăn với tên khớp tiêu chí tìm kiếm và còn bán
-    const results = await MonAn.find(searchCriteria);
+    // Tìm kiếm món ăn và populate danh mục
+    let results = await MonAn.find(searchCriteria)
+      .populate({
+        path: "id_danhMuc",
+        match: { id_nhahang: id_nhahang }, // Lọc dựa trên id_nhahang trong DanhMuc
+      })
+      .exec();
+
+    // Lọc ra các món ăn có danh mục khớp với id_nhahang
+    results = results.filter(monAn => monAn.id_danhMuc);
 
     res.status(200).json(results);
   } catch (error) {
