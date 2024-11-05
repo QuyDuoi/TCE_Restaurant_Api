@@ -135,8 +135,8 @@ router.post("/timKiemMonAn", tim_kiem_mon_an);
 router.post("/themNhanVien", upload.single("hinhAnh"), them_nhan_vien);
 router.put("/capNhatNhanVien/:id", upload.single("hinhAnh"), cap_nhat_nhan_vien);
 router.delete("/xoaNhanVien/:id", xoa_nhan_vien);
-// router.get("/layDsNhanVien", lay_ds_nhan_vien);
-router.get("/layDsNhanVien", verifyToken, lay_ds_nhan_vien);
+router.get("/layDsNhanVien", lay_ds_nhan_vien);
+// router.get("/layDsNhanVien", verifyToken, lay_ds_nhan_vien);
 
 // Restful Api Khu Vực
 router.post("/themKhuVuc", them_khu_vuc);
