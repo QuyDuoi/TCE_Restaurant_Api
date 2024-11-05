@@ -15,7 +15,7 @@ exports.them_chi_tiet_hoa_don = async (req, res, next) => {
     // Tạo chi tiết hóa đơn mới
     const chiTietHoaDon = new ChiTietHoaDon({ soLuongMon,trangThai, giaTien, id_monAn });
     const result = await chiTietHoaDon.save();
-
+    
     res.status(201).json(result);
   } catch (error) {
     res.status(400).json({ msg: error.message });
@@ -36,6 +36,11 @@ exports.cap_nhat_chi_tiet_hoa_don = async (req, res) => {
 
     // Cập nhật các thông tin của chi tiết hóa đơn
    
+    // Kiểm tra nếu soLuongMon = 0 thì xoá chi tiết hóa đơn
+    if (soLuongMon === 0) {
+      await ChiTietHoaDon.findByIdAndDelete(id);
+      return res.status(200).json({ msg: "Chi tiết hóa đơn đã được xóa" });
+    }
     // Kiểm tra và cập nhật thông tin nếu có thay đổi
     if (soLuongMon !== undefined && soLuongMon !== chiTietHoaDon.soLuongMon) {
       chiTietHoaDon.soLuongMon = soLuongMon;
