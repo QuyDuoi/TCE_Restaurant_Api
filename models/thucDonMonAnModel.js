@@ -6,7 +6,8 @@ const thucdonmonanModel = new mongoose.Schema(
         id_monAn: { type: mongoose.Schema.Types.ObjectId, ref: "MonAn", require: true }
     },
     {
-        timestamps: true
+        timestamps: true,
+        collection:"ThucDonMonAn"
     }
 );
 let ThucDonMonAn = mongoose.model("ThucDonMonAn", thucdonmonanModel)

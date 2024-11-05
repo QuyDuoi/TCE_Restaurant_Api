@@ -9,7 +9,8 @@ const toppingModel = new mongoose.Schema(
         id_nhomTopping: { type: mongoose.Schema.Types.ObjectId, ref: "NhomTopping", require: true }
     },
     {
-        timestamps: true
+        timestamps: true,
+        collection:"Topping"
     }
 );
 let Topping = mongoose.model("Topping", toppingModel);

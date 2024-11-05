@@ -6,7 +6,8 @@ const thucdonModel = new mongoose.Schema(
         moTa:{type:String,require:true}
     },
     {
-        timestamps:true
+        timestamps:true,
+        collection:"ThucDon"
     }
 );
 
