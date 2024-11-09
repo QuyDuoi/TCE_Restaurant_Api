@@ -30,12 +30,6 @@ const hoaDonSchema = new mongoose.Schema(
         required: false,
       },
     ],
-
-    id_caLamViec: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "CaLamViec",
-      required: false,
-    },
   },
   {
     collection: "HoaDon",

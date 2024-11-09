@@ -4,7 +4,7 @@ const { MonAn } = require("../models/monAnModel");
 // Thêm chi tiết hóa đơn
 exports.them_chi_tiet_hoa_don = async (req, res, next) => {
   try {
-    const { soLuongMon,trangThai, giaTien, id_monAn } = req.body;
+    const { soLuongMon, trangThai, giaTien, id_monAn } = req.body;
     // Kiểm tra xem món ăn có tồn tại hay không
     const monAn = await MonAn.findById(id_monAn);
 
@@ -13,9 +13,14 @@ exports.them_chi_tiet_hoa_don = async (req, res, next) => {
     }
 
     // Tạo chi tiết hóa đơn mới
-    const chiTietHoaDon = new ChiTietHoaDon({ soLuongMon,trangThai, giaTien, id_monAn });
+    const chiTietHoaDon = new ChiTietHoaDon({
+      soLuongMon,
+      trangThai,
+      giaTien,
+      id_monAn,
+    });
     const result = await chiTietHoaDon.save();
-    
+
     res.status(201).json(result);
   } catch (error) {
     res.status(400).json({ msg: error.message });
@@ -26,7 +31,7 @@ exports.them_chi_tiet_hoa_don = async (req, res, next) => {
 exports.cap_nhat_chi_tiet_hoa_don = async (req, res) => {
   try {
     const { id } = req.params;
-    const { soLuongMon,trangThai, giaTien, id_monAn } = req.body;
+    const { soLuongMon, trangThai, giaTien, id_monAn } = req.body;
 
     // Tìm chi tiết hóa đơn theo ID
     const chiTietHoaDon = await ChiTietHoaDon.findById(id);
@@ -35,7 +40,7 @@ exports.cap_nhat_chi_tiet_hoa_don = async (req, res) => {
     }
 
     // Cập nhật các thông tin của chi tiết hóa đơn
-   
+
     // Kiểm tra nếu soLuongMon = 0 thì xoá chi tiết hóa đơn
     if (soLuongMon === 0) {
       await ChiTietHoaDon.findByIdAndDelete(id);
@@ -60,6 +65,32 @@ exports.cap_nhat_chi_tiet_hoa_don = async (req, res) => {
     res.status(200).json(result);
   } catch (error) {
     res.status(400).json({ msg: error.message });
+  }
+};
+
+// Cập nhật trạng thái chi tiết hóa đơn
+exports.cap_nhat_trang_thai_cthd = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Tìm chi tiết hóa đơn theo ID
+    const chiTietHoaDon = await ChiTietHoaDon.findById(id);
+
+    // Kiểm tra nếu không tìm thấy chi tiết hóa đơn
+    if (!chiTietHoaDon) {
+      return res.status(404).json({ msg: "Không tìm thấy chi tiết hóa đơn" });
+    }
+
+    // Đảo ngược trạng thái
+    chiTietHoaDon.trangThai = !chiTietHoaDon.trangThai;
+
+    // Lưu thay đổi
+    const result = await chiTietHoaDon.save();
+
+    // Trả về chi tiết hóa đơn đã cập nhật
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ msg: "Lỗi server", error: error.message });
   }
 };
 
@@ -88,9 +119,8 @@ exports.lay_ds_chi_tiet_hoa_don = async (req, res, next) => {
     const chiTietHoaDons = await ChiTietHoaDon.find({ _id: { $in: ids } }) // Sử dụng $in để tìm tất cả các id trong mảng
       .populate("id_monAn")
       .sort({ createdAt: -1 });
-    
-    res.status(200).json(chiTietHoaDons);
 
+    res.status(200).json(chiTietHoaDons);
   } catch (error) {
     res.status(400).json({ msg: error.message });
   }

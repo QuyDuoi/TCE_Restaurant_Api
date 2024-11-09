@@ -2,16 +2,28 @@ const { mongoose } = require("../config/db");
 
 const caLamViecSchema = new mongoose.Schema(
   {
-    batDau: { type: Date, required: true }, 
-    ketThuc: { type: Date, required: false },  
-    soDuBanDau: {type: String, required: true } ,
-    soDuHienTai: {type: String, required: true } ,
-    tongTienMat: {type: String, required: false } ,
-    tongChuyenKhoan: {type: String, required: false } ,
-    tongDoanhThu: {type: String, required: false } ,
-    tongThu: {type: String, required: false } ,
-    tongChi: {type: String, required: false } ,
-    id_nhanVien: { type: mongoose.Schema.Types.ObjectId, ref: "NhanVien", required: true }, 
+    batDau: { type: Date, required: true },
+    ketThuc: { type: Date, required: false },
+    soDuBanDau: { type: String, required: true },
+    soDuHienTai: { type: String, required: true },
+    tongTienMat: { type: String, required: false },
+    tongChuyenKhoan: { type: String, required: false },
+    tongDoanhThu: { type: String, required: false },
+    tongThu: { type: String, required: false },
+    tongChi: { type: String, required: false },
+    id_nhanVien: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "NhanVien",
+      required: true,
+    },
+    id_hoaDon: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "HoaDon", required: true },
+    ],
+    id_nhaHang: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "NhaHang",
+      required: true,
+    },
   },
   {
     collection: "CaLamViec",

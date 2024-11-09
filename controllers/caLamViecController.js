@@ -1,5 +1,7 @@
 const { CaLamViec } = require("../models/caLamViecModel");
 const { NhanVien } = require("../models/nhanVienModel");
+const { HoaDon } = require("../models/hoaDonModel");
+const { ChiTietHoaDon } = require("../models/chiTietHoaDonModel");
 
 // Thêm ca làm việc
 exports.them_ca_lam_viec = async (req, res, next) => {
@@ -131,5 +133,49 @@ exports.lay_ds_ca_lam_viec = async (req, res, next) => {
     res.status(200).json(caLamViecs);
   } catch (error) {
     res.status(400).json({ msg: error.message });
+  }
+};
+
+exports.lay_chi_tiet_hoa_don_theo_ca_lam = async (req, res) => {
+  try {
+    const { id_caLam } = req.body;
+
+    // Tìm Ca Làm Việc và populate hóa đơn cùng chi tiết hóa đơn
+    const caLam = await CaLamViec.findById(id_caLam).populate({
+      path: "id_hoaDon",
+      populate: {
+        path: "id_chiTietHoaDon", // Populate chi tiết hóa đơn
+        populate: {
+          path: "id_monAn", // Populate món ăn từ chi tiết hóa đơn
+          model: "MonAn",
+        }
+      },
+    });
+
+    if (!caLam) {
+      return res.status(404).json({ msg: "Không tìm thấy ca làm việc" });
+    }
+
+    // Lấy tất cả chi tiết hóa đơn từ các hóa đơn trong ca làm việc
+    let chiTietHoaDons = [];
+    caLam.id_hoaDon.forEach((hoaDon) => {
+      chiTietHoaDons = chiTietHoaDons.concat(hoaDon.id_chiTietHoaDon);
+    });
+
+    // Sắp xếp chi tiết hóa đơn:
+    // - Trạng thái chưa hoàn thành (false) lên đầu, cũ nhất trước
+    // - Trạng thái hoàn thành (true) xuống sau, mới nhất trước
+    chiTietHoaDons.sort((a, b) => {
+      if (a.trangThai === b.trangThai) {
+        return a.trangThai
+          ? new Date(b.updatedAt) - new Date(a.updatedAt) // Hoàn thành: mới nhất trước
+          : new Date(a.createdAt) - new Date(b.createdAt); // Chưa hoàn thành: cũ nhất trước
+      }
+      return a.trangThai - b.trangThai; // false (0) lên trước true (1)
+    });
+
+    return res.status(200).json(chiTietHoaDons);
+  } catch (error) {
+    res.status(500).json({ msg: "Lỗi server", error: error.message });
   }
 };
