@@ -1,5 +1,5 @@
 const { HoaDon } = require("../models/hoaDonModel");
-
+const mongoose = require('mongoose');
 // Thêm hóa đơn
 exports.them_hoa_don = async (req, res, next) => {
   try {
@@ -40,6 +40,7 @@ exports.them_hoa_don = async (req, res, next) => {
         hoaDon.id_ban = id_ban;
       }
     }
+    
     const result = await hoaDon.save();
 
     res.status(201).json(result);
@@ -138,7 +139,6 @@ exports.xoa_hoa_don = async (req, res, next) => {
 exports.lay_ds_hoa_don = async (req, res, next) => {
   try {
     const { id_caLamViec } = req.query;
-    console.log(id_caLamViec);
     
     const hoaDons = await HoaDon.find( {id_caLamViec} ).sort({ createdAt: -1 });
 
@@ -147,4 +147,36 @@ exports.lay_ds_hoa_don = async (req, res, next) => {
     res.status(400).json({ msg: error.message });
   }
 };
+
+
+exports.lay_ds_hoa_don_theo_id_nha_hang = async (req, res, next) => {
+  try {
+    const { id_nhaHang } = req.query;
+    console.log(id_nhaHang);
+
+    // Truy vấn Aggregate để lọc HoaDon theo id_nhaHang trong NhanVien
+    let results = await HoaDon.aggregate([
+      {
+        $lookup: {
+          from: "NhanVien",
+          localField: "id_nhanVien",
+          foreignField: "_id",
+          as: "nhanVienDetails",
+        },
+      },
+      {
+        $match: {
+          "nhanVienDetails.id_nhaHang": new mongoose.Types.ObjectId(id_nhaHang),
+        },
+      }
+      // Không cần `$unwind` ở đây nếu không muốn phẳng hóa mảng nhanVienDetails
+    ]);
+
+    res.status(200).json(results);
+  } catch (error) {
+    res.status(400).json({ msg: error.message });
+  }
+};
+
+
 
