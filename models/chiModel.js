@@ -2,9 +2,13 @@ const { mongoose } = require("../config/db");
 
 const chiSchema = new mongoose.Schema(
   {
-    soTienChi: { type: String, required: true }, 
-    moTa: { type: String, required: true },   
-    id_caLamViec: [{ type: mongoose.Schema.Types.ObjectId, ref: "CaLamViec", required: true }], 
+    soTienChi: { type: String, required: true },
+    moTa: { type: String, required: true },
+    id_caLamViec: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "CaLamViec",
+      required: true,
+    },
   },
   {
     collection: "Chi",
