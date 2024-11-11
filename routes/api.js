@@ -75,6 +75,7 @@ const {
   cap_nhat_hoa_don,
   xoa_hoa_don,
   lay_ds_hoa_don,
+  lay_ds_hoa_don_theo_id_nha_hang,
 
 } = require("../controllers/hoaDonController");
 
@@ -91,6 +92,7 @@ const {
   cap_nhat_thu,
   xoa_thu,
   lay_ds_thu,
+  lay_ds_thu_chi
 } = require("../controllers/thuController");
 
 const {
@@ -177,6 +179,7 @@ router.post("/themHoaDon", them_hoa_don);
 router.put("/capNhatHoaDon/:id", cap_nhat_hoa_don);
 router.delete("/xoaHoaDon/:id", xoa_hoa_don);
 router.get("/layDsHoaDon", lay_ds_hoa_don);
+router.get("/layDsHoaDonTheoNhaHang", lay_ds_hoa_don_theo_id_nha_hang);
 
 // Restful Api Ca Làm Việc
 router.post("/themCaLamViec", them_ca_lam_viec);
@@ -190,6 +193,7 @@ router.post("/themThu", them_thu);
 router.put("/capNhatThu/:id", cap_nhat_thu);
 router.delete("/xoaThu/:id", xoa_thu);
 router.get("/layDsThu", lay_ds_thu);
+router.get("/layDsThuChi", lay_ds_thu_chi);
 
 // Restful Api Chi
 router.post("/themChi", them_chi);

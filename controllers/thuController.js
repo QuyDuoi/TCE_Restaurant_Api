@@ -1,4 +1,5 @@
 const { Thu } = require("../models/thuModel");
+const { Chi } = require("../models/chiModel");
 const { CaLamViec } = require("../models/caLamViecModel");
 
 // Thêm khoản thu
@@ -93,6 +94,35 @@ exports.lay_ds_thu = async (req, res, next) => {
     res.status(200).json(thus);
   } catch (error) {
     res.status(400).json({ msg: error.message });
+  }
+};
+
+
+exports.lay_ds_thu_chi = async (req, res, next) => {
+  try {
+
+    const {id_caLamViec} = req.query;
+    // Lấy tất cả các bản ghi "Thu"
+    const thuRecords = await Thu.find({id_caLamViec}).populate('id_caLamViec');
+
+    // Lấy tất cả các bản ghi "Chi"
+    const chiRecords = await Chi.find({id_caLamViec}).populate('id_caLamViec');
+
+    // Trả về phản hồi với cả bản ghi thu và chi
+    res.status(200).json({
+      success: true,
+      data: {
+        thu: thuRecords,
+        chi: chiRecords,
+      },
+    });
+  } catch (error) {
+    // Xử lý lỗi
+    res.status(500).json({
+      success: false,
+      message: 'Không thể lấy được dữ liệu',
+      error: error.message,
+    });
   }
 };
 

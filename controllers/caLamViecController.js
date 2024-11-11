@@ -16,7 +16,9 @@ exports.them_ca_lam_viec = async (req, res, next) => {
       tongDoanhThu,
       tongThu,
       tongChi,
-      id_nhanVien
+      id_nhanVien,
+      id_hoaDon,
+      id_nhaHang
     } = req.body;
 
     // Kiểm tra xem nhân viên có tồn tại không
@@ -36,7 +38,9 @@ exports.them_ca_lam_viec = async (req, res, next) => {
       tongDoanhThu,
       tongThu,
       tongChi,
-      id_nhanVien
+      id_nhanVien,
+      id_hoaDon,
+      id_nhaHang
     });
 
     const result = await caLamViec.save();
@@ -61,7 +65,9 @@ exports.cap_nhat_ca_lam_viec = async (req, res, next) => {
       tongDoanhThu,
       tongThu,
       tongChi,
-      id_nhanVien
+      id_nhanVien,
+      id_hoaDon,
+      id_nhaHang
     } = req.body;
 
     // Tìm ca làm việc theo ID
@@ -87,6 +93,7 @@ exports.cap_nhat_ca_lam_viec = async (req, res, next) => {
     if (tongTienMat !== undefined && caLamViec.tongTienMat != tongTienMat) caLamViec.tongTienMat = tongTienMat;
     if (tongChuyenKhoan !== undefined && caLamViec.tongChuyenKhoan != tongChuyenKhoan) caLamViec.tongChuyenKhoan = tongChuyenKhoan;
     if (tongDoanhThu !== undefined && caLamViec.tongDoanhThu != tongDoanhThu) caLamViec.tongDoanhThu = tongDoanhThu;
+    if (id_nhanVien !== undefined && caLamViec.id_nhanVien != id_nhanVien) caLamViec.id_nhanVien = id_nhanVien;
     if (tongThu !== undefined) caLamViec.tongThu = tongThu;
     if (tongChi !== undefined) caLamViec.tongChi = tongChi;
 
