@@ -84,7 +84,8 @@ const {
   cap_nhat_ca_lam_viec,
   xoa_ca_lam_viec,
   lay_ds_ca_lam_viec,
-  lay_chi_tiet_hoa_don_theo_ca_lam
+  lay_chi_tiet_hoa_don_theo_ca_lam,
+  lay_ds_hoa_don_theo_ca_lam_viec
 } = require("../controllers/caLamViecController");
 
 const {
@@ -187,6 +188,7 @@ router.put("/capNhatCaLamViec/:id", cap_nhat_ca_lam_viec);
 router.delete("/xoaCaLamViec/:id", xoa_ca_lam_viec);
 router.get("/layDsCaLamViec", lay_ds_ca_lam_viec);
 router.post("/layCthdTheoCaLam", lay_chi_tiet_hoa_don_theo_ca_lam);
+router.get("/layHdTheoCaLam", lay_ds_hoa_don_theo_ca_lam_viec);
 
 // Restful Api Thu
 router.post("/themThu", them_thu);
