@@ -1,7 +1,6 @@
 const { CaLamViec } = require("../models/caLamViecModel");
 const { NhanVien } = require("../models/nhanVienModel");
-const { HoaDon } = require("../models/hoaDonModel");
-const { ChiTietHoaDon } = require("../models/chiTietHoaDonModel");
+
 
 // Thêm ca làm việc
 exports.them_ca_lam_viec = async (req, res, next) => {
@@ -184,5 +183,29 @@ exports.lay_chi_tiet_hoa_don_theo_ca_lam = async (req, res) => {
     return res.status(200).json(chiTietHoaDons);
   } catch (error) {
     res.status(500).json({ msg: "Lỗi server", error: error.message });
+  }
+};
+
+
+exports.lay_ds_hoa_don_theo_ca_lam_viec = async (req, res, next) => {
+  try {
+    const { id_caLamViec } = req.query;
+
+    if (!id_caLamViec) {
+      return res.status(400).json({ message: "id_caLamViec là bắt buộc" });
+    }
+
+    // Tìm tài liệu CaLamViec và sử dụng populate để lấy các tài liệu HoaDon liên quan
+    const caLamViec = await CaLamViec.findById(id_caLamViec).populate('id_hoaDon');
+
+    if (!caLamViec) {
+      return res.status(404).json({ message: "Không tìm thấy CaLamViec" });
+    }
+
+    // Trả về danh sách các tài liệu HoaDon đã populate
+    res.status(200).json( caLamViec.id_hoaDon );
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Lỗi máy chủ nội bộ", error: error.message });
   }
 };
