@@ -151,7 +151,7 @@ exports.lay_ds_hoa_don = async (req, res, next) => {
 
 exports.lay_ds_hoa_don_theo_id_nha_hang = async (req, res, next) => {
   try {
-    const { id_nhaHang } = req.body;
+    const { id_nhaHang } = req.query;
     
     // Step 1: Tìm ca làm hiện tại theo id_nhaHang và thời gian kết thúc
     const caLamHienTai = await CaLamViec.findOne({
@@ -160,7 +160,7 @@ exports.lay_ds_hoa_don_theo_id_nha_hang = async (req, res, next) => {
     }).populate({
       path: 'id_hoaDon', // Lấy các hóa đơn liên kết với ca làm
       match: { trangThai: "Chưa Thanh Toán" }, // Lọc chỉ các hóa đơn chưa thanh toán
-      select: 'tongGiaTri trangThai id_nhanVien ghiChu thoiGianVaoBan thoiGianRaBan', // Chọn các trường cần thiết từ HoaDon
+      // Không sử dụng 'select' để chọn tất cả các trường từ HoaDon
       populate: {
         path: 'id_chiTietHoaDon',
         select: 'giaTien' // Lấy trường giaTien từ ChiTietHoaDon
@@ -173,19 +173,15 @@ exports.lay_ds_hoa_don_theo_id_nha_hang = async (req, res, next) => {
 
     // Step 2: Tính tổng tiền của tất cả chi tiết hóa đơn và trả về dữ liệu
     const result = caLamHienTai.id_hoaDon.map((invoice) => {
+      // Tính tổng tiền từ tất cả các chi tiết hóa đơn
       const totalAmount = invoice.id_chiTietHoaDon.reduce(
         (sum, item) => sum + item.giaTien, 0
       );
 
+      // Trả về tất cả các thuộc tính của hóa đơn cộng với tổng tiền
       return {
-        _id: invoice._id,
-        tongGiaTri: invoice.tongGiaTri,
-        tongTien: totalAmount,
-        trangThai: invoice.trangThai,
-        id_nhanVien: invoice.id_nhanVien,
-        ghiChu: invoice.ghiChu,
-        thoiGianVaoBan: invoice.thoiGianVaoBan,
-        thoiGianRaBan: invoice.thoiGianRaBan,
+        ...invoice.toObject(),  // Chuyển hóa đơn thành object để giữ lại tất cả các thuộc tính
+        tongTien: totalAmount,   // Thêm trường tongTien
       };
     });
 
