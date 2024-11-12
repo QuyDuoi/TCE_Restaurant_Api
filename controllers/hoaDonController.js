@@ -1,5 +1,5 @@
 const { HoaDon } = require("../models/hoaDonModel");
-const mongoose = require('mongoose');
+const { CaLamViec } = require("../models/caLamViecModel");
 // Thêm hóa đơn
 exports.them_hoa_don = async (req, res, next) => {
   try {
@@ -151,32 +151,50 @@ exports.lay_ds_hoa_don = async (req, res, next) => {
 
 exports.lay_ds_hoa_don_theo_id_nha_hang = async (req, res, next) => {
   try {
-    const { id_nhaHang } = req.query;
-    console.log(id_nhaHang);
-
-    // Truy vấn Aggregate để lọc HoaDon theo id_nhaHang trong NhanVien
-    let results = await HoaDon.aggregate([
-      {
-        $lookup: {
-          from: "NhanVien",
-          localField: "id_nhanVien",
-          foreignField: "_id",
-          as: "nhanVienDetails",
-        },
-      },
-      {
-        $match: {
-          "nhanVienDetails.id_nhaHang": new mongoose.Types.ObjectId(id_nhaHang),
-        },
+    const { id_nhaHang } = req.body;
+    
+    // Step 1: Tìm ca làm hiện tại theo id_nhaHang và thời gian kết thúc
+    const caLamHienTai = await CaLamViec.findOne({
+      id_nhaHang: id_nhaHang,
+      ketThuc: null
+    }).populate({
+      path: 'id_hoaDon', // Lấy các hóa đơn liên kết với ca làm
+      match: { trangThai: "Chưa Thanh Toán" }, // Lọc chỉ các hóa đơn chưa thanh toán
+      select: 'tongGiaTri trangThai id_nhanVien ghiChu thoiGianVaoBan thoiGianRaBan', // Chọn các trường cần thiết từ HoaDon
+      populate: {
+        path: 'id_chiTietHoaDon',
+        select: 'giaTien' // Lấy trường giaTien từ ChiTietHoaDon
       }
-      // Không cần `$unwind` ở đây nếu không muốn phẳng hóa mảng nhanVienDetails
-    ]);
+    });
 
-    res.status(200).json(results);
+    if (!caLamHienTai) {
+      return res.status(400).json({ msg: "Hiện không có ca làm nào được mở!" });
+    }
+
+    // Step 2: Tính tổng tiền của tất cả chi tiết hóa đơn và trả về dữ liệu
+    const result = caLamHienTai.id_hoaDon.map((invoice) => {
+      const totalAmount = invoice.id_chiTietHoaDon.reduce(
+        (sum, item) => sum + item.giaTien, 0
+      );
+
+      return {
+        _id: invoice._id,
+        tongGiaTri: invoice.tongGiaTri,
+        tongTien: totalAmount,
+        trangThai: invoice.trangThai,
+        id_nhanVien: invoice.id_nhanVien,
+        ghiChu: invoice.ghiChu,
+        thoiGianVaoBan: invoice.thoiGianVaoBan,
+        thoiGianRaBan: invoice.thoiGianRaBan,
+      };
+    });
+
+    return res.status(200).json(result);
   } catch (error) {
-    res.status(400).json({ msg: error.message });
+    return res.status(400).json({ msg: error.message });
   }
 };
+
 
 
 
