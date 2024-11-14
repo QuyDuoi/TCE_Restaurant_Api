@@ -3,7 +3,7 @@ const { DanhMuc } = require("../models/danhMucModel");
 // Thêm danh mục
 exports.them_danh_muc = async (req, res, next) => {
   try {
-    const { tenDanhMuc, id_nhaHang } = req.body;
+    const { tenDanhMuc, id_nhaHang } = req.query;
 
     // Kiểm tra nếu danh mục đã tồn tại cho cửa hàng này
     const checkDanhMuc = await DanhMuc.findOne({ tenDanhMuc, id_nhaHang });

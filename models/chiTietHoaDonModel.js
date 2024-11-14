@@ -5,7 +5,8 @@ const chiTietHoaDonSchema = new mongoose.Schema(
     soLuongMon: { type: Number, required: true }, // Số lượng món ăn
     giaTien: { type: Number, required: true },    // Giá tiền tương ứng
     trangThai: { type: Boolean, default: true, require: true },
-    id_monAn: { type: mongoose.Schema.Types.ObjectId, ref: "MonAn", required: true }, // Tham chiếu đến Món ăn
+    id_monAn: { type: mongoose.Schema.Types.ObjectId, ref: "MonAn", required: true }, 
+    id_hoaDon: { type: mongoose.Schema.Types.ObjectId, ref: "HoaDon", required: true }, 
   },
   {
     collection: "ChiTietHoaDon",

@@ -4,13 +4,15 @@ const { MonAn } = require("../models/monAnModel");
 // Thêm chi tiết hóa đơn
 exports.them_chi_tiet_hoa_don = async (req, res, next) => {
   try {
-    const { soLuongMon, trangThai, giaTien, id_monAn } = req.body;
+    const { soLuongMon, trangThai, id_monAn } = req.body;
     // Kiểm tra xem món ăn có tồn tại hay không
     const monAn = await MonAn.findById(id_monAn);
 
     if (!monAn) {
       return res.status(404).json({ msg: "Món ăn không tồn tại" });
     }
+
+    const giaTien = soLuongMon * monAn.giaMonAn;
 
     // Tạo chi tiết hóa đơn mới
     const chiTietHoaDon = new ChiTietHoaDon({

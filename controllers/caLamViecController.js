@@ -1,6 +1,6 @@
 const { CaLamViec } = require("../models/caLamViecModel");
+const { HoaDon } = require("../models/hoaDonModel");
 const { NhanVien } = require("../models/nhanVienModel");
-
 
 // Thêm ca làm việc
 exports.them_ca_lam_viec = async (req, res, next) => {
@@ -17,7 +17,7 @@ exports.them_ca_lam_viec = async (req, res, next) => {
       tongChi,
       id_nhanVien,
       id_hoaDon,
-      id_nhaHang
+      id_nhaHang,
     } = req.body;
 
     // Kiểm tra xem nhân viên có tồn tại không
@@ -39,7 +39,7 @@ exports.them_ca_lam_viec = async (req, res, next) => {
       tongChi,
       id_nhanVien,
       id_hoaDon,
-      id_nhaHang
+      id_nhaHang,
     });
 
     const result = await caLamViec.save();
@@ -66,7 +66,7 @@ exports.cap_nhat_ca_lam_viec = async (req, res, next) => {
       tongChi,
       id_nhanVien,
       id_hoaDon,
-      id_nhaHang
+      id_nhaHang,
     } = req.body;
 
     // Tìm ca làm việc theo ID
@@ -85,14 +85,25 @@ exports.cap_nhat_ca_lam_viec = async (req, res, next) => {
     }
 
     // Cập nhật các thông tin khác nếu có thay đổi
-    if (batDau !== undefined && caLamViec.batDau != batDau) caLamViec.batDau = batDau;
-    if (ketThuc !== undefined && caLamViec.ketThuc != ketThuc) caLamViec.ketThuc = ketThuc;
-    if (soDuBanDau !== undefined && caLamViec.soDuBanDau != soDuBanDau) caLamViec.soDuBanDau = soDuBanDau;
-    if (soDuHienTai !== undefined && caLamViec.soDuHienTai != soDuHienTai) caLamViec.soDuHienTai = soDuHienTai;
-    if (tongTienMat !== undefined && caLamViec.tongTienMat != tongTienMat) caLamViec.tongTienMat = tongTienMat;
-    if (tongChuyenKhoan !== undefined && caLamViec.tongChuyenKhoan != tongChuyenKhoan) caLamViec.tongChuyenKhoan = tongChuyenKhoan;
-    if (tongDoanhThu !== undefined && caLamViec.tongDoanhThu != tongDoanhThu) caLamViec.tongDoanhThu = tongDoanhThu;
-    if (id_nhanVien !== undefined && caLamViec.id_nhanVien != id_nhanVien) caLamViec.id_nhanVien = id_nhanVien;
+    if (batDau !== undefined && caLamViec.batDau != batDau)
+      caLamViec.batDau = batDau;
+    if (ketThuc !== undefined && caLamViec.ketThuc != ketThuc)
+      caLamViec.ketThuc = ketThuc;
+    if (soDuBanDau !== undefined && caLamViec.soDuBanDau != soDuBanDau)
+      caLamViec.soDuBanDau = soDuBanDau;
+    if (soDuHienTai !== undefined && caLamViec.soDuHienTai != soDuHienTai)
+      caLamViec.soDuHienTai = soDuHienTai;
+    if (tongTienMat !== undefined && caLamViec.tongTienMat != tongTienMat)
+      caLamViec.tongTienMat = tongTienMat;
+    if (
+      tongChuyenKhoan !== undefined &&
+      caLamViec.tongChuyenKhoan != tongChuyenKhoan
+    )
+      caLamViec.tongChuyenKhoan = tongChuyenKhoan;
+    if (tongDoanhThu !== undefined && caLamViec.tongDoanhThu != tongDoanhThu)
+      caLamViec.tongDoanhThu = tongDoanhThu;
+    if (id_nhanVien !== undefined && caLamViec.id_nhanVien != id_nhanVien)
+      caLamViec.id_nhanVien = id_nhanVien;
     if (tongThu !== undefined) caLamViec.tongThu = tongThu;
     if (tongChi !== undefined) caLamViec.tongChi = tongChi;
 
@@ -144,17 +155,21 @@ exports.lay_ds_ca_lam_viec = async (req, res, next) => {
 
 exports.lay_chi_tiet_hoa_don_theo_ca_lam = async (req, res) => {
   try {
-    const { id_caLam } = req.body;
+    const { id_caLamViec } = req.body;
+
+    if (!id_caLam) {
+      return res.status(400).json({ msg: "Thiếu id_caLam" });
+    }
 
     // Tìm Ca Làm Việc và populate hóa đơn cùng chi tiết hóa đơn
-    const caLam = await CaLamViec.findById(id_caLam).populate({
+    const caLam = await CaLamViec.findById(id_caLamViec).populate({
       path: "id_hoaDon",
       populate: {
-        path: "id_chiTietHoaDon", // Populate chi tiết hóa đơn
+        path: "id_chiTietHoaDon",
         populate: {
           path: "id_monAn", // Populate món ăn từ chi tiết hóa đơn
           model: "MonAn",
-        }
+        },
       },
     });
 
@@ -168,42 +183,55 @@ exports.lay_chi_tiet_hoa_don_theo_ca_lam = async (req, res) => {
       chiTietHoaDons = chiTietHoaDons.concat(hoaDon.id_chiTietHoaDon);
     });
 
-    // Sắp xếp chi tiết hóa đơn:
-    // - Trạng thái chưa hoàn thành (false) lên đầu, cũ nhất trước
-    // - Trạng thái hoàn thành (true) xuống sau, mới nhất trước
+    // Kiểm tra nếu không có chi tiết hóa đơn
+    if (chiTietHoaDons.length === 0) {
+      return res
+        .status(200)
+        .json({ msg: "Không có chi tiết hóa đơn nào trong ca làm việc này" });
+    }
+
+    // Sắp xếp chi tiết hóa đơn theo yêu cầu
     chiTietHoaDons.sort((a, b) => {
       if (a.trangThai === b.trangThai) {
         return a.trangThai
-          ? new Date(b.updatedAt) - new Date(a.updatedAt) // Hoàn thành: mới nhất trước
+          ? new Date(b.updatedAt) - new Date(a.updatedAt) // Đã hoàn thành: mới nhất trước
           : new Date(a.createdAt) - new Date(b.createdAt); // Chưa hoàn thành: cũ nhất trước
       }
       return a.trangThai - b.trangThai; // false (0) lên trước true (1)
     });
 
-    return res.status(200).json(chiTietHoaDons);
+    return res.status(200).json({
+      msg: "Lấy chi tiết hóa đơn thành công",
+      chiTietHoaDons: chiTietHoaDons,
+    });
   } catch (error) {
     res.status(500).json({ msg: "Lỗi server", error: error.message });
   }
 };
 
-
 exports.lay_ds_hoa_don_theo_ca_lam_viec = async (req, res, next) => {
   try {
-    const { id_caLamViec } = req.query;
+    const { id_caLamViec } = req.body;
 
     if (!id_caLamViec) {
-      return res.status(400).json({ message: "id_caLamViec là bắt buộc" });
+      return res.status(400).json({ msg: "Không có thông tin id Ca làm việc" });
     }
 
-    // Tìm tài liệu CaLamViec và sử dụng populate để lấy các tài liệu HoaDon liên quan
-    const caLamViec = await CaLamViec.findById(id_caLamViec).populate('id_hoaDon');
+    // Tìm tất cả các hóa đơn có id_caLamViec và trạng thái là "Đã Thanh Toán"
+    const hoaDons = await HoaDon.find({
+      id_caLamViec: id_caLamViec,
+      trangThai: "Đã Thanh Toán", // Đảm bảo giá trị khớp với dữ liệu trong database
+    });
 
-    if (!caLamViec) {
-      return res.status(404).json({ message: "Không tìm thấy CaLamViec" });
+    if (!hoaDons || hoaDons.length === 0) {
+      return res.status(200).json({ msg: "Không có hóa đơn nào đã thanh toán trong ca làm việc này" });
     }
 
-    // Trả về danh sách các tài liệu HoaDon đã populate
-    res.status(200).json( caLamViec.id_hoaDon );
+    // Trả về danh sách hóa đơn đã thanh toán
+    res.status(200).json({
+      msg: "Lấy danh sách hóa đơn thành công",
+      data: hoaDons,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Lỗi máy chủ nội bộ", error: error.message });

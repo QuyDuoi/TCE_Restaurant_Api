@@ -71,7 +71,7 @@ const {
 } = require("../controllers/chiTietHoaDonController");
 
 const {
-  them_hoa_don,
+  them_hoa_don_moi,
   cap_nhat_hoa_don,
   xoa_hoa_don,
   lay_ds_hoa_don,
@@ -176,7 +176,7 @@ router.post("/layDsChiTietHoaDon", lay_ds_chi_tiet_hoa_don);
 router.put("/capNhatTrangThaiCthd/:id", cap_nhat_trang_thai_cthd);
 
 // Restful Api Hóa Đơn
-router.post("/themHoaDon", them_hoa_don);
+router.post("/themHoaDonMoi", them_hoa_don_moi);
 router.put("/capNhatHoaDon/:id", cap_nhat_hoa_don);
 router.delete("/xoaHoaDon/:id", xoa_hoa_don);
 router.get("/layDsHoaDon", lay_ds_hoa_don);

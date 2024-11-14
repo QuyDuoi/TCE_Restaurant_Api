@@ -2,17 +2,17 @@ const { mongoose } = require("../config/db");
 
 const hoaDonSchema = new mongoose.Schema(
   {
-    tongGiaTri: { type: Number, required: true },
+    tongGiaTri: { type: Number, default: 0 },
     trangThai: {
       type: String,
       enum: ["Đã Thanh Toán", "Chưa Thanh Toán"],
       default: "Chưa Thanh Toán",
     },
-    tienGiamGia: { type: Number, required: true },
+    tienGiamGia: { type: Number, default: 0 },
     ghiChu: { type: String, required: false },
-    hinhThucThanhToan: { type: Boolean, require: true },
-    thoiGianVaoBan: { type: Date, require: false },
-    thoiGianRaBan: { type: Date, require: false },
+    hinhThucThanhToan: { type: Boolean, default: false },
+    thoiGianVao: { type: Date, require: true },
+    thoiGianRa: { type: Date, require: false },
     id_nhanVien: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "NhanVien",
@@ -23,13 +23,11 @@ const hoaDonSchema = new mongoose.Schema(
       ref: "Ban",
       required: false,
     }, // Bán mang đi không cần id_ban
-    id_chiTietHoaDon: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "ChiTietHoaDon",
-        required: false,
-      },
-    ],
+    id_caLamViec: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "CaLamViec",
+      require: true,
+    },
   },
   {
     collection: "HoaDon",
