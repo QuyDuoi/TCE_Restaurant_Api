@@ -23,7 +23,7 @@ const {
   cap_nhat_mon_an,
   xoa_mon_an,
   lay_ds_mon_an,
-  tim_kiem_mon_an
+  tim_kiem_mon_an,
 } = require("../controllers/monAnController");
 
 const {
@@ -45,7 +45,7 @@ const {
   cap_nhat_ban,
   xoa_ban,
   lay_ds_ban,
-  tim_kiem_ban
+  tim_kiem_ban,
 } = require("../controllers/banController");
 
 const {
@@ -67,7 +67,7 @@ const {
   cap_nhat_chi_tiet_hoa_don,
   xoa_chi_tiet_hoa_don,
   lay_ds_chi_tiet_hoa_don,
-  cap_nhat_trang_thai_cthd
+  cap_nhat_trang_thai_cthd,
 } = require("../controllers/chiTietHoaDonController");
 
 const {
@@ -76,16 +76,15 @@ const {
   xoa_hoa_don,
   lay_ds_hoa_don,
   lay_ds_hoa_don_theo_id_nha_hang,
-
 } = require("../controllers/hoaDonController");
 
 const {
-  them_ca_lam_viec,
+  mo_ca_lam_viec,
   cap_nhat_ca_lam_viec,
   xoa_ca_lam_viec,
   lay_ds_ca_lam_viec,
   lay_chi_tiet_hoa_don_theo_ca_lam,
-  lay_ds_hoa_don_theo_ca_lam_viec
+  lay_ds_hoa_don_theo_ca_lam_viec,
 } = require("../controllers/caLamViecController");
 
 const {
@@ -93,7 +92,7 @@ const {
   cap_nhat_thu,
   xoa_thu,
   lay_ds_thu,
-  lay_ds_thu_chi
+  lay_ds_thu_chi,
 } = require("../controllers/thuController");
 
 const {
@@ -103,19 +102,16 @@ const {
   lay_ds_chi,
 } = require("../controllers/chiController");
 
-
 const {
   lay_top_5_mon_an_ban_chay,
   thong_ke_hinh_thuc_thanh_toan,
   thongKeTongDoanhThu,
-  thongKeDoanhThuTheoNguon
-
+  thongKeDoanhThuTheoNguon,
 } = require("../controllers/thongKeController");
 
 const {
-  addListChiTietHoaDon
-} = require("../controllers/listChiTietHoaDonController")
-
+  addListChiTietHoaDon,
+} = require("../controllers/listChiTietHoaDonController");
 
 // Restful Api Cửa hàng
 router.post("/themNhaHang", upload.single("hinhAnh"), them_nha_hang);
@@ -138,7 +134,11 @@ router.post("/timKiemMonAn", tim_kiem_mon_an);
 
 // Restful Api Nhân Viên
 router.post("/themNhanVien", upload.single("hinhAnh"), them_nhan_vien);
-router.put("/capNhatNhanVien/:id", upload.single("hinhAnh"), cap_nhat_nhan_vien);
+router.put(
+  "/capNhatNhanVien/:id",
+  upload.single("hinhAnh"),
+  cap_nhat_nhan_vien
+);
 router.delete("/xoaNhanVien/:id", xoa_nhan_vien);
 router.get("/layDsNhanVien", lay_ds_nhan_vien);
 // router.get("/layDsNhanVien", verifyToken, lay_ds_nhan_vien);
@@ -183,7 +183,7 @@ router.get("/layDsHoaDon", lay_ds_hoa_don);
 router.get("/layDsHoaDonTheoNhaHang", lay_ds_hoa_don_theo_id_nha_hang);
 
 // Restful Api Ca Làm Việc
-router.post("/themCaLamViec", them_ca_lam_viec);
+router.post("/moCaLamViec", mo_ca_lam_viec);
 router.put("/capNhatCaLamViec/:id", cap_nhat_ca_lam_viec);
 router.delete("/xoaCaLamViec/:id", xoa_ca_lam_viec);
 router.get("/layDsCaLamViec", lay_ds_ca_lam_viec);
@@ -216,6 +216,6 @@ router.get("/thongKeHinhThucThanhToan", thong_ke_hinh_thuc_thanh_toan);
 router.get("/thongKeDoanhThuTheoNguon", thongKeDoanhThuTheoNguon);
 
 // Restful API List Chi Tiết Hoá Đơn
-router.post("/addListChiTietHoaDon", addListChiTietHoaDon)
+router.post("/addListChiTietHoaDon", addListChiTietHoaDon);
 
 module.exports = router;

@@ -1,5 +1,6 @@
 const { HoaDon } = require("../models/hoaDonModel");
 const { CaLamViec } = require("../models/caLamViecModel");
+const { Ban } = require("../models/banModel");
 
 // Thêm hóa đơn
 exports.them_hoa_don_moi = async (req, res, next) => {
@@ -11,16 +12,29 @@ exports.them_hoa_don_moi = async (req, res, next) => {
       return res.status(404).json({ msg: "Ca làm việc không tồn tại" });
     }
 
-    const hoaDonMoi = new HoaDon({
-      thoiGianVao,
-      id_nhanVien,
-      id_ban,
-      id_caLamViec,
-    });
+    const thongTinBan = await Ban.findById(id_ban);
 
-    const result = await hoaDonMoi.save();
+    if (thongTinBan.trangThai === "Đang sử dụng") {
+      return res
+        .status(404)
+        .json({
+          msg: "Bàn này đang được sử dụng, không thể tạo thêm hóa đơn!",
+        });
+    } else {
+      const hoaDonMoi = new HoaDon({
+        thoiGianVao,
+        id_nhanVien,
+        id_ban,
+        id_caLamViec,
+      });
 
-    res.status(201).json(result);
+      thongTinBan.trangThai = "Đang sử dụng";
+      await thongTinBan.save();
+
+      const result = await hoaDonMoi.save();
+
+      res.status(201).json(result);
+    }
   } catch (error) {
     res.status(400).json({ msg: error.message });
   }
