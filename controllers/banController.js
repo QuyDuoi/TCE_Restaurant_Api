@@ -93,8 +93,8 @@ exports.xoa_ban = async (req, res, next) => {
 exports.lay_ds_ban = async (req, res, next) => {
   try {
     const { id_khuVuc } = req.query;
-    
-    const bans = await Ban.find(id_khuVuc)
+
+    const bans = await Ban.find({ id_khuVuc })
       .populate("id_khuVuc")
       .sort({ createdAt: -1 });
 

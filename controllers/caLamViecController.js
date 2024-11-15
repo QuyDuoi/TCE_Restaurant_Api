@@ -1,4 +1,5 @@
 const { CaLamViec } = require("../models/caLamViecModel");
+const { ChiTietHoaDon } = require("../models/chiTietHoaDonModel");
 const { HoaDon } = require("../models/hoaDonModel");
 const { NhanVien } = require("../models/nhanVienModel");
 
@@ -150,33 +151,31 @@ exports.lay_chi_tiet_hoa_don_theo_ca_lam = async (req, res) => {
   try {
     const { id_caLamViec } = req.body;
 
-    if (!id_caLam) {
-      return res.status(400).json({ msg: "Thiếu id_caLam" });
+    if (!id_caLamViec) {
+      return res.status(400).json({ msg: "Thiếu id_caLamViec" });
     }
 
-    // Tìm Ca Làm Việc và populate hóa đơn cùng chi tiết hóa đơn
-    const caLam = await CaLamViec.findById(id_caLamViec).populate({
-      path: "id_hoaDon",
-      populate: {
-        path: "id_chiTietHoaDon",
-        populate: {
-          path: "id_monAn", // Populate món ăn từ chi tiết hóa đơn
-          model: "MonAn",
-        },
-      },
-    });
+    // Tìm tất cả các hóa đơn có id_caLamViec
+    const hoaDons = await HoaDon.find({ id_caLamViec }, "_id"); // Lấy danh sách id của hóa đơn trong ca làm việc
 
-    if (!caLam) {
-      return res.status(404).json({ msg: "Không tìm thấy ca làm việc" });
+    if (!hoaDons || hoaDons.length === 0) {
+      return res
+        .status(404)
+        .json({ msg: "Không tìm thấy hóa đơn nào cho ca làm việc này" });
     }
 
-    // Lấy tất cả chi tiết hóa đơn từ các hóa đơn trong ca làm việc
-    let chiTietHoaDons = [];
-    caLam.id_hoaDon.forEach((hoaDon) => {
-      chiTietHoaDons = chiTietHoaDons.concat(hoaDon.id_chiTietHoaDon);
+    // Lấy danh sách các id_hoaDon
+    const hoaDonIds = hoaDons.map((hoaDon) => hoaDon._id);
+
+    // Tìm tất cả các chi tiết hóa đơn có id_hoaDon nằm trong danh sách hoaDonIds
+    const chiTietHoaDons = await ChiTietHoaDon.find({
+      id_hoaDon: { $in: hoaDonIds },
+    }).populate({
+      path: "id_monAn", // Populate thông tin món ăn
+      model: "MonAn",
     });
 
-    // Kiểm tra nếu không có chi tiết hóa đơn
+    // Kiểm tra nếu không có chi tiết hóa đơn nào được tìm thấy
     if (chiTietHoaDons.length === 0) {
       return res
         .status(200)
@@ -193,10 +192,9 @@ exports.lay_chi_tiet_hoa_don_theo_ca_lam = async (req, res) => {
       return a.trangThai - b.trangThai; // false (0) lên trước true (1)
     });
 
-    return res.status(200).json({
-      msg: "Lấy chi tiết hóa đơn thành công",
-      chiTietHoaDons: chiTietHoaDons,
-    });
+    console.log(chiTietHoaDons);
+
+    return res.status(200).json(chiTietHoaDons);
   } catch (error) {
     res.status(500).json({ msg: "Lỗi server", error: error.message });
   }
