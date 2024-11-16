@@ -25,6 +25,7 @@ const {
   xoa_mon_an,
   lay_ds_mon_an,
   tim_kiem_mon_an,
+  lay_danh_sach_thuc_don
 } = require("../controllers/monAnController");
 
 const {
@@ -134,6 +135,7 @@ router.put("/capNhatMonAn/:id", upload.single("anhMonAn"), cap_nhat_mon_an);
 router.delete("/xoaMonAn/:id", xoa_mon_an);
 router.get("/layDsMonAn", lay_ds_mon_an);
 router.get("/timKiemMonAn", tim_kiem_mon_an);
+router.get("/layDanhSachThucDon", lay_danh_sach_thuc_don);
 
 // Restful Api Nhân Viên
 router.post("/themNhanVien", upload.single("hinhAnh"), them_nhan_vien);
@@ -191,7 +193,7 @@ router.post("/moCaLamViec", mo_ca_lam_viec);
 router.put("/capNhatCaLamViec/:id", cap_nhat_ca_lam_viec);
 router.delete("/xoaCaLamViec/:id", xoa_ca_lam_viec);
 router.get("/layDsCaLamViec", lay_ds_ca_lam_viec);
-router.post("/layCthdTheoCaLam", lay_chi_tiet_hoa_don_theo_ca_lam);
+router.get("/layCthdTheoCaLam", lay_chi_tiet_hoa_don_theo_ca_lam);
 router.get("/layHdTheoCaLam", lay_ds_hoa_don_theo_ca_lam_viec);
 
 // Restful Api Thu

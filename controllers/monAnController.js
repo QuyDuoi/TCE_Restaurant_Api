@@ -188,3 +188,32 @@ exports.tim_kiem_mon_an = async (req, res, next) => {
   }
 };
 
+// API lấy cả danh mục và món ăn
+exports.lay_danh_sach_thuc_don = async (req, res, next) => {
+  try {
+    const { id_nhaHang } = req.query;
+    if (!id_nhaHang) {
+      return res.status(400).json({ msg: "Thiếu id_nhaHang" });
+    }
+
+    // Lấy danh sách danh mục
+    const danhMucs = await DanhMuc.find({ id_nhaHang }).sort({ thuTu: -1 });
+
+    // Lấy danh sách món ăn cho từng danh mục
+    const danhMucWithMonAn = await Promise.all(
+      danhMucs.map(async danhMuc => {
+        const monAns = await MonAn.find({ id_danhMuc: danhMuc._id }).sort({
+          createdAt: -1,
+        });
+        return { ...danhMuc.toObject(), monAns };
+      })
+    );
+
+    res.status(200).json(danhMucWithMonAn);
+  } catch (error) {
+    console.error("Error fetching DanhMuc and MonAn:", error);
+    res.status(500).json({ msg: "Internal server error", error: error.message });
+  }
+};
+
+

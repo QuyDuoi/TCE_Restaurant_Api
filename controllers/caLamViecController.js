@@ -149,11 +149,20 @@ exports.lay_ds_ca_lam_viec = async (req, res, next) => {
 
 exports.lay_chi_tiet_hoa_don_theo_ca_lam = async (req, res) => {
   try {
-    const { id_caLamViec } = req.body;
+    const { id_nhaHang } = req.query;
 
-    if (!id_caLamViec) {
-      return res.status(400).json({ msg: "Thiếu id_caLamViec" });
+    console.log(req.query);
+
+    const caLamViec = await CaLamViec.findOne({
+      id_nhaHang: id_nhaHang,
+      ketThuc: null
+    })
+
+    if (!caLamViec) {
+      return res.status(400).json({ msg: "Hiện chưa có ca làm việc nào được mở!" });
     }
+    
+    const id_caLamViec = caLamViec._id;
 
     // Tìm tất cả các hóa đơn có id_caLamViec
     const hoaDons = await HoaDon.find({ id_caLamViec }, "_id id_ban").populate({
