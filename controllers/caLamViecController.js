@@ -156,7 +156,15 @@ exports.lay_chi_tiet_hoa_don_theo_ca_lam = async (req, res) => {
     }
 
     // Tìm tất cả các hóa đơn có id_caLamViec
-    const hoaDons = await HoaDon.find({ id_caLamViec }, "_id"); // Lấy danh sách id của hóa đơn trong ca làm việc
+    const hoaDons = await HoaDon.find({ id_caLamViec }, "_id id_ban").populate({
+      path: "id_ban",
+      select: "tenBan id_khuVuc",
+      populate: {
+        path: "id_khuVuc",
+        model: "KhuVuc",
+        select: "tenKhuVuc",
+      },
+    });
 
     if (!hoaDons || hoaDons.length === 0) {
       return res
@@ -182,8 +190,20 @@ exports.lay_chi_tiet_hoa_don_theo_ca_lam = async (req, res) => {
         .json({ msg: "Không có chi tiết hóa đơn nào trong ca làm việc này" });
     }
 
+    // Kết hợp chi tiết hóa đơn với thông tin khu vực và bàn
+    const chiTietHdkvs = chiTietHoaDons.map((chiTiet) => {
+      const hoaDon = hoaDons.find(
+        (hd) => hd._id.toString() === chiTiet.id_hoaDon.toString()
+      );
+      return {
+        ...chiTiet.toObject(),
+        ban: hoaDon.id_ban, // Thêm thông tin bàn
+        khuVuc: hoaDon.id_ban.id_khuVuc, // Thêm thông tin khu vực
+      };
+    });
+
     // Sắp xếp chi tiết hóa đơn theo yêu cầu
-    chiTietHoaDons.sort((a, b) => {
+    chiTietHdkvs.sort((a, b) => {
       if (a.trangThai === b.trangThai) {
         return a.trangThai
           ? new Date(b.updatedAt) - new Date(a.updatedAt) // Đã hoàn thành: mới nhất trước
@@ -192,9 +212,7 @@ exports.lay_chi_tiet_hoa_don_theo_ca_lam = async (req, res) => {
       return a.trangThai - b.trangThai; // false (0) lên trước true (1)
     });
 
-    console.log(chiTietHoaDons);
-
-    return res.status(200).json(chiTietHoaDons);
+    return res.status(200).json(chiTietHdkvs);
   } catch (error) {
     res.status(500).json({ msg: "Lỗi server", error: error.message });
   }
@@ -221,10 +239,7 @@ exports.lay_ds_hoa_don_theo_ca_lam_viec = async (req, res, next) => {
     }
 
     // Trả về danh sách hóa đơn đã thanh toán
-    res.status(200).json({
-      msg: "Lấy danh sách hóa đơn thành công",
-      data: hoaDons,
-    });
+    res.status(200).json(hoaDons);
   } catch (error) {
     console.error(error);
     res

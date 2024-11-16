@@ -8,6 +8,7 @@ const danhMucSchema = new mongoose.Schema(
       ref: "NhaHang",
       required: true,
     },
+    thuTu: { type: Number, default: 0}
   },
   {
     collection: "DanhMuc",

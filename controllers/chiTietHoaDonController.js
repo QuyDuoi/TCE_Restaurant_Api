@@ -115,14 +115,16 @@ exports.xoa_chi_tiet_hoa_don = async (req, res, next) => {
 // Lấy danh sách chi tiết hóa đơn
 exports.lay_ds_chi_tiet_hoa_don = async (req, res, next) => {
   try {
-    const { ids } = req.body; // Nhận danh sách id từ body của request (dạng mảng)
-    console.log(ids);
+    const { id_hoaDon } = req.body; 
 
-    const chiTietHoaDons = await ChiTietHoaDon.find({ _id: { $in: ids } }) // Sử dụng $in để tìm tất cả các id trong mảng
-      .populate("id_monAn")
-      .sort({ createdAt: -1 });
+    const chiTietHoaDons = await ChiTietHoaDon.find({ id_hoaDon }).sort({ createdAT: 1 });
 
-    res.status(200).json(chiTietHoaDons);
+    if (!chiTietHoaDons) {
+      return res.status(400).json({msg: "Không có chi tiết hóa đơn nào!"});
+    } else {
+      res.status(200).json(chiTietHoaDons);
+    }
+
   } catch (error) {
     res.status(400).json({ msg: error.message });
   }

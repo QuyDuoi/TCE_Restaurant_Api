@@ -16,6 +16,7 @@ const {
   cap_nhat_danh_muc,
   xoa_danh_muc,
   lay_ds_danh_muc,
+  sap_xep_vi_tri_danh_muc
 } = require("../controllers/danhMucController");
 
 const {
@@ -76,6 +77,7 @@ const {
   xoa_hoa_don,
   lay_ds_hoa_don,
   lay_ds_hoa_don_theo_id_nha_hang,
+  danh_sach_hoa_don
 } = require("../controllers/hoaDonController");
 
 const {
@@ -124,6 +126,7 @@ router.post("/themDanhMuc", them_danh_muc);
 router.put("/capNhatDanhMuc/:id", cap_nhat_danh_muc);
 router.delete("/xoaDanhMuc/:id", xoa_danh_muc);
 router.get("/layDsDanhMuc", lay_ds_danh_muc);
+router.post("/sapXepDanhMuc", sap_xep_vi_tri_danh_muc);
 
 // Restful Api Món Ăn
 router.post("/themMonAn", upload.single("anhMonAn"), them_mon_an);
@@ -174,6 +177,7 @@ router.put("/capNhatChiTietHoaDon/:id", cap_nhat_chi_tiet_hoa_don);
 router.delete("/xoaChiTietHoaDon/:id", xoa_chi_tiet_hoa_don);
 router.post("/layDsChiTietHoaDon", lay_ds_chi_tiet_hoa_don);
 router.put("/capNhatTrangThaiCthd/:id", cap_nhat_trang_thai_cthd);
+router.get("/layDanhSach", danh_sach_hoa_don);
 
 // Restful Api Hóa Đơn
 router.post("/themHoaDonMoi", them_hoa_don_moi);

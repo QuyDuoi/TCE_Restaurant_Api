@@ -1,6 +1,7 @@
 const { HoaDon } = require("../models/hoaDonModel");
 const { CaLamViec } = require("../models/caLamViecModel");
 const { Ban } = require("../models/banModel");
+const { ChiTietHoaDon } = require("../models/chiTietHoaDonModel");
 
 // Thêm hóa đơn
 exports.them_hoa_don_moi = async (req, res, next) => {
@@ -159,28 +160,52 @@ exports.lay_ds_hoa_don_theo_id_nha_hang = async (req, res, next) => {
     const hoaDons = await HoaDon.find({
       id_caLamViec: caLamHienTai._id,
       trangThai: "Chưa Thanh Toán",
-    }).populate({
-      path: "id_chiTietHoaDon",
-      select: "giaTien", // Chỉ lấy trường giaTien từ ChiTietHoaDon
     });
 
-    // Step 3: Tính tổng tiền của tất cả chi tiết hóa đơn và trả về dữ liệu
-    const result = hoaDons.map((invoice) => {
-      // Tính tổng tiền từ tất cả các chi tiết hóa đơn
-      const totalAmount = invoice.id_chiTietHoaDon.reduce(
-        (sum, item) => sum + item.giaTien,
+    if (!hoaDons.length) {
+      return res.status(200).json({ msg: "Không có hóa đơn nào trong ca làm này." });
+    }
+
+    // Lấy danh sách id của các hóa đơn
+    const idHoaDons = hoaDons.map((hoaDon) => hoaDon._id);
+    
+    // Step 3: Tìm tất cả ChiTietHoaDon có `id_hoaDon` thuộc danh sách `idHoaDons`
+    const chiTietHoaDons = await ChiTietHoaDon.find({
+      id_hoaDon: { $in: idHoaDons },
+    });
+
+    // Step 4: Tính tổng tiền cho từng hóa đơn
+    const result = hoaDons.map((hoaDon) => {
+      // Lọc các ChiTietHoaDon thuộc về hóa đơn hiện tại
+      const chiTietCuaHoaDon = chiTietHoaDons.filter(
+        (chiTiet) => chiTiet.id_hoaDon.toString() === hoaDon._id.toString()
+      );
+
+      // Tính tổng tiền
+      const tongTien = chiTietCuaHoaDon.reduce(
+        (sum, chiTiet) => sum + chiTiet.giaTien,
         0
       );
 
-      // Trả về tất cả các thuộc tính của hóa đơn cộng với tổng tiền
+      // Trả về hóa đơn cùng với tổng tiền
       return {
-        ...invoice.toObject(), // Chuyển hóa đơn thành object để giữ lại tất cả các thuộc tính
-        tongTien: totalAmount, // Thêm trường tongTien
+        ...hoaDon.toObject(),
+        tongTien: tongTien,
       };
     });
 
+    // Trả về danh sách hóa đơn kèm tổng tiền
     return res.status(200).json(result);
   } catch (error) {
     return res.status(400).json({ msg: error.message });
   }
 };
+
+exports.danh_sach_hoa_don = async (req, res) => {
+  try {
+    const chiTietHoaDons = await ChiTietHoaDon.find();
+    return res.status(200).json(chiTietHoaDons);
+  } catch (error) {
+    return res.status(400).json({ msg: error.message });
+  }
+}
