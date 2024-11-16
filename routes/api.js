@@ -133,7 +133,7 @@ router.post("/themMonAn", upload.single("anhMonAn"), them_mon_an);
 router.put("/capNhatMonAn/:id", upload.single("anhMonAn"), cap_nhat_mon_an);
 router.delete("/xoaMonAn/:id", xoa_mon_an);
 router.get("/layDsMonAn", lay_ds_mon_an);
-router.post("/timKiemMonAn", tim_kiem_mon_an);
+router.get("/timKiemMonAn", tim_kiem_mon_an);
 
 // Restful Api Nhân Viên
 router.post("/themNhanVien", upload.single("hinhAnh"), them_nhan_vien);

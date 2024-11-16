@@ -1,14 +1,19 @@
+const { DanhMuc } = require("../models/danhMucModel");
 const { MonAn } = require("../models/monAnModel");
+const unidecode = require("unidecode");
 
 // Thêm món ăn với hình ảnh
 exports.them_mon_an = async (req, res, next) => {
   try {
-    const { tenMon, moTa, giaMonAn, trangThai, id_danhMuc, id_nhomTopping } = req.body;
+    const { tenMon, moTa, giaMonAn, trangThai, id_danhMuc, id_nhomTopping } =
+      req.body;
     let anhMonAn = "";
 
     // Kiểm tra file tải lên
     if (req.file) {
-      anhMonAn = `${req.protocol}://${req.get("host")}/public/uploads/${req.file.filename}`;
+      anhMonAn = `${req.protocol}://${req.get("host")}/public/uploads/${
+        req.file.filename
+      }`;
     }
 
     // Tạo đối tượng món ăn mới
@@ -19,7 +24,7 @@ exports.them_mon_an = async (req, res, next) => {
       giaMonAn,
       trangThai,
       id_danhMuc,
-      id_nhomTopping
+      id_nhomTopping,
     });
 
     // Lưu món ăn vào cơ sở dữ liệu
@@ -31,15 +36,18 @@ exports.them_mon_an = async (req, res, next) => {
     console.error("Error creating MonAn:", error);
 
     // Phân loại lỗi để trả về thông tin chi tiết
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({ msg: "Dữ liệu không hợp lệ", details: error.errors });
+    if (error.name === "ValidationError") {
+      return res
+        .status(400)
+        .json({ msg: "Dữ liệu không hợp lệ", details: error.errors });
     }
-    
+
     // Nếu lỗi khác không xác định, trả về thông tin tổng quát hơn
-    res.status(500).json({ msg: "Lỗi khi thêm mới Món ăn", error: error.message });
+    res
+      .status(500)
+      .json({ msg: "Lỗi khi thêm mới Món ăn", error: error.message });
   }
 };
-
 
 // Cập nhật món ăn với hình ảnh
 exports.cap_nhat_mon_an = async (req, res, next) => {
@@ -91,10 +99,14 @@ exports.cap_nhat_mon_an = async (req, res, next) => {
     res.status(200).json(result);
   } catch (error) {
     console.error("Error updating MonAn:", error);
-  if (error.name === 'ValidationError') {
-    return res.status(400).json({ msg: "Validation error", details: error.errors });
-  }
-  res.status(500).json({ msg: "Internal server error", error: error.message });
+    if (error.name === "ValidationError") {
+      return res
+        .status(400)
+        .json({ msg: "Validation error", details: error.errors });
+    }
+    res
+      .status(500)
+      .json({ msg: "Internal server error", error: error.message });
   }
 };
 
@@ -112,7 +124,9 @@ exports.xoa_mon_an = async (req, res, next) => {
     res.status(200).json({ msg: "Đã xóa món ăn" });
   } catch (error) {
     console.error("Error deleting MonAn:", error);
-  res.status(500).json({ msg: "Internal server error", error: error.message });
+    res
+      .status(500)
+      .json({ msg: "Internal server error", error: error.message });
   }
 };
 
@@ -134,33 +148,43 @@ exports.lay_ds_mon_an = async (req, res, next) => {
     res.status(200).json(monAns);
   } catch (error) {
     console.error("Error fetching MonAns:", error);
-  res.status(500).json({ msg: "Internal server error", error: error.message });
+    res
+      .status(500)
+      .json({ msg: "Internal server error", error: error.message });
   }
 };
 
 exports.tim_kiem_mon_an = async (req, res, next) => {
   try {
-    const { textSearch, id_nhahang } = req.query;
+    // Lấy dữ liệu từ `req.query`
+    const { textSearch, id_nhaHang } = req.query;
 
-    // Thiết lập tiêu chí tìm kiếm ban đầu
-    const searchCriteria = {
-      trangThai: true,
-      ...(textSearch && { tenMon: { $regex: textSearch, $options: "i" } })
-    };
+    console.log("Request Query:", req.query);
 
-    // Tìm kiếm món ăn và populate danh mục
-    let results = await MonAn.find(searchCriteria)
-      .populate({
-        path: "id_danhMuc",
-        match: { id_nhahang: id_nhahang }, // Lọc dựa trên id_nhahang trong DanhMuc
-      })
-      .exec();
+    // Loại bỏ dấu của từ khóa tìm kiếm
+    const textSearchNoAccents = unidecode(textSearch).toLowerCase();
 
-    // Lọc ra các món ăn có danh mục khớp với id_nhahang
-    results = results.filter(monAn => monAn.id_danhMuc);
+    // 1. Lấy danh sách `id_danhMuc` thuộc nhà hàng
+    const danhMucs = await DanhMuc.find({ id_nhaHang });
+    const idDanhMucs = danhMucs.map((danhMuc) => danhMuc._id);
 
-    res.status(200).json(results);
+    if (idDanhMucs.length === 0) {
+      return res.status(404).json({ msg: "Không tìm thấy danh mục nào!" });
+    }
+
+    // 2. Lấy danh sách món ăn thuộc các `id_danhMuc`
+    const monAns = await MonAn.find({ id_danhMuc: { $in: idDanhMucs } });
+
+    // 3. Lọc danh sách món ăn dựa trên từ khóa tìm kiếm
+    const danhSachKetQua = monAns.filter((item) => {
+      const tenMonNoAccents = unidecode(item.tenMon).toLowerCase();
+      return tenMonNoAccents.includes(textSearchNoAccents);
+    });
+
+    res.status(200).json(danhSachKetQua);
   } catch (error) {
+    console.error("Error occurred:", error);
     res.status(400).json({ msg: error.message });
   }
 };
+
