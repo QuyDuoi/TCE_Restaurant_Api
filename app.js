@@ -3,11 +3,18 @@ var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
+const cors = require('cors');
 
 var indexRouter = require("./routes/index");
 const database = require("./config/db");
 var apiRouter = require("./routes/api");
 var authRouter = require("./routes/auth"); // Thêm dòng này
+
+const corsOptions = {
+  origin: 'http://localhost:3000', // React chạy trên localhost
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true // Cho phép gửi cookie, nếu cần
+};
 
 var app = express();
 
@@ -25,6 +32,7 @@ app.use(
   "/public/uploads",
   express.static(path.join(__dirname, "public/uploads"))
 );
+app.use(cors(corsOptions));
 
 app.use("/", indexRouter);
 app.use("/api", apiRouter);
