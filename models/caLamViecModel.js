@@ -4,11 +4,11 @@ const caLamViecSchema = new mongoose.Schema(
   {
     batDau: { type: Date, required: true },
     ketThuc: { type: Date, required: false },
-    soDuBanDau: { type: String, required: true },
-    soDuHienTai: { type: String, required: true },
-    tongTienMat: { type: String, required: false },
-    tongChuyenKhoan: { type: String, required: false },
-    tongDoanhThu: { type: String, required: false },
+    soDuBanDau: { type: Number, required: true },
+    soDuHienTai: { type: Number, required: true },
+    tongTienMat: { type: Number, default: 0 },
+    tongChuyenKhoan: { type: Number, default: 0 },
+    tongDoanhThu: { type: Number, default: 0 },
     tongThu: { type: Number, default: 0 },
     tongChi: { type: Number, default: 0 },
     id_nhanVien: {

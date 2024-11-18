@@ -9,15 +9,20 @@ exports.them_thu = async (req, res, next) => {
 
     // Kiểm tra xem ca làm việc có tồn tại không
     const caLamViec = await CaLamViec.findById(id_caLamViec);
+
     if (!caLamViec) {
       return res.status(404).json({ msg: "Ca làm việc không tồn tại" });
     }
+
+    caLamViec.tongThu += soTienThu;
+    caLamViec.soDuHienTai += soTienThu;
+    await caLamViec.save();
 
     // Tạo khoản thu mới
     const thu = new Thu({
       soTienThu,
       moTa,
-      id_caLamViec
+      id_caLamViec,
     });
 
     const result = await thu.save();
@@ -50,7 +55,8 @@ exports.cap_nhat_thu = async (req, res, next) => {
     }
 
     // Cập nhật các thông tin khác nếu có thay đổi
-    if (soTienThu !== undefined && thu.soTienThu != soTienThu) thu.soTienThu = soTienThu;
+    if (soTienThu !== undefined && thu.soTienThu != soTienThu)
+      thu.soTienThu = soTienThu;
     if (moTa !== undefined && thu.moTa != moTa) thu.moTa = moTa;
 
     const result = await thu.save();
@@ -82,7 +88,7 @@ exports.xoa_thu = async (req, res, next) => {
 exports.lay_ds_thu = async (req, res, next) => {
   try {
     const { id_caLamViec } = req.query;
-    
+
     // Xây dựng điều kiện truy vấn dựa trên có hoặc không có id_caLamViec
     let query = {};
     if (id_caLamViec) {
@@ -97,32 +103,33 @@ exports.lay_ds_thu = async (req, res, next) => {
   }
 };
 
-
 exports.lay_ds_thu_chi = async (req, res, next) => {
   try {
-
-    const {id_caLamViec} = req.query;
+    const { id_caLamViec } = req.query;
     // Lấy tất cả các bản ghi "Thu"
-    const thuRecords = await Thu.find({id_caLamViec}).populate('id_caLamViec');
+    const thuRecords = await Thu.find({ id_caLamViec }).sort({ createdAT: -1 });
 
     // Lấy tất cả các bản ghi "Chi"
-    const chiRecords = await Chi.find({id_caLamViec}).populate('id_caLamViec');
+    const chiRecords = await Chi.find({ id_caLamViec }).sort({ createdAT: -1 });
+
+    // Kết hợp các bản ghi "Thu" và "Chi"
+    const tatCa = [...thuRecords, ...chiRecords];
+
+    // Sắp xếp lại mảng theo thứ tự thời gian (từ mới nhất đến cũ nhất)
+    tatCa.sort((a, b) => new Date(b.createdAT) - new Date(a.createdAT));
 
     // Trả về phản hồi với cả bản ghi thu và chi
     res.status(200).json({
-      success: true,
-      data: {
-        thu: thuRecords,
-        chi: chiRecords,
-      },
+      tatCa: tatCa,
+      thu: thuRecords,
+      chi: chiRecords,
     });
   } catch (error) {
     // Xử lý lỗi
     res.status(500).json({
       success: false,
-      message: 'Không thể lấy được dữ liệu',
+      message: "Không thể lấy được dữ liệu",
       error: error.message,
     });
   }
 };
-

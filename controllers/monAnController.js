@@ -197,7 +197,7 @@ exports.lay_danh_sach_thuc_don = async (req, res, next) => {
     }
 
     // Lấy danh sách danh mục
-    const danhMucs = await DanhMuc.find({ id_nhaHang }).sort({ thuTu: -1 });
+    const danhMucs = await DanhMuc.find({ id_nhaHang }).sort({ thuTu: 1 });
 
     // Lấy danh sách món ăn cho từng danh mục
     const danhMucWithMonAn = await Promise.all(

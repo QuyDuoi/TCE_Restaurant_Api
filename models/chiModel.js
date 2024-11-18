@@ -2,7 +2,7 @@ const { mongoose } = require("../config/db");
 
 const chiSchema = new mongoose.Schema(
   {
-    soTienChi: { type: String, required: true },
+    soTienChi: { type: Number, required: true },
     moTa: { type: String, required: true },
     id_caLamViec: {
       type: mongoose.Schema.Types.ObjectId,

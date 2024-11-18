@@ -78,7 +78,8 @@ const {
   xoa_hoa_don,
   lay_ds_hoa_don,
   lay_ds_hoa_don_theo_id_nha_hang,
-  danh_sach_hoa_don
+  danh_sach_hoa_don,
+  thanh_toan_hoa_don
 } = require("../controllers/hoaDonController");
 
 const {
@@ -187,6 +188,7 @@ router.put("/capNhatHoaDon/:id", cap_nhat_hoa_don);
 router.delete("/xoaHoaDon/:id", xoa_hoa_don);
 router.get("/layDsHoaDon", lay_ds_hoa_don);
 router.get("/layDsHoaDonTheoNhaHang", lay_ds_hoa_don_theo_id_nha_hang);
+router.post("/thanhToanHoaDon", thanh_toan_hoa_don);
 
 // Restful Api Ca Làm Việc
 router.post("/moCaLamViec", mo_ca_lam_viec);

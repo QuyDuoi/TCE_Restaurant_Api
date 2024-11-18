@@ -103,6 +103,9 @@ exports.sap_xep_vi_tri_danh_muc = async (req, res) => {
   try {
     const { id_nhaHang, danhMucs } = req.body;
 
+    console.log("Id nhà hàng: " + id_nhaHang);
+    
+
     // Kiểm tra dữ liệu đầu vào
     if (!id_nhaHang || !danhMucs || !Array.isArray(danhMucs)) {
       return res.status(400).json({ msg: "Dữ liệu không hợp lệ" });

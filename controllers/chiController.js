@@ -12,6 +12,11 @@ exports.them_chi = async (req, res, next) => {
       return res.status(404).json({ msg: "Ca làm việc không tồn tại" });
     }
 
+    caLamViec.tongChi -= soTienChi;
+    caLamViec.soDuHienTai -= soTienChi;
+
+    await caLamViec.save();
+
     // Tạo khoản chi mới
     const chi = new Chi({
       soTienChi,
