@@ -6,11 +6,16 @@ const banSchema = new mongoose.Schema(
     sucChua: { type: String, required: true },
     trangThai: {
       type: String,
-      enum: ["Trống", "Đang sử dụng","Đã đặt"],
+      enum: ["Trống", "Đang sử dụng", "Đã đặt"],
       default: "Trống",
     },
     ghiChu: { type: String, required: false },
-    id_khuVuc: { type: mongoose.Schema.Types.ObjectId, ref: "KhuVuc", required: true },
+    maQRCode: { type: String, required: false },
+    id_khuVuc: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "KhuVuc",
+      required: true,
+    },
   },
   {
     collection: "Ban",

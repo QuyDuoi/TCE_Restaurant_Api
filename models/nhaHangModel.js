@@ -6,6 +6,7 @@ const nhaHangSchema = new mongoose.Schema(
     hinhAnh: { type: String, required: true },
     soDienThoai: { type: String, required: true },
     diaChi: { type: String, required: true },
+    anhQRCode: {type: String, required: true}
   },
   {
     collection: "NhaHang",

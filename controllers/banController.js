@@ -1,5 +1,6 @@
 const { Ban } = require("../models/banModel");
 const { KhuVuc } = require("../models/khuVucModel");
+const QRCode = require("qrcode");
 
 // Thêm bàn
 exports.them_ban = async (req, res, next) => {
@@ -118,5 +119,52 @@ exports.tim_kiem_ban = async (req, res, next) => {
     res.status(200).json(results);
   } catch (error) {
     res.status(400).json({ msg: error.message });
+  }
+};
+
+exports.tao_qr_code = async (req, res) => {
+  try {
+    const { id } = req.query;
+
+    console.log(id);
+    
+    // Tìm thông tin bàn từ MongoDB
+    const ban = await Ban.findById(id);
+
+    console.log(ban);
+    
+    if (!ban) {
+      return res
+        .status(404)
+        .json({ msg: "Bàn không tồn tại" });
+    }
+
+    // URL hoặc nội dung bạn muốn mã hóa vào QR
+    const qrContent = `https://localhost:3000/order?idBan=${id}`;
+
+    // Tạo mã QR và lưu thành file
+    const qrPath = `./public/qrcodes/qrcode_ban_${id}.png`;
+    await QRCode.toFile(qrPath, qrContent);
+
+    // (Tùy chọn) Lưu URL file QR vào trường maQRCode
+    const qrUrl = `https://localhost:3000/qrcodes/qrcode_ban_${id}.png`;
+
+    // Cập nhật maQRCode của bàn
+    ban.maQRCode = qrUrl;
+    await ban.save();
+
+    res.json({
+      msg: "Mã QR đã được tạo và cập nhật",
+      maQRCode: qrUrl,
+    });
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json({
+        success: false,
+        msg: "Lỗi khi tạo mã QR",
+        error: err.message,
+      });
   }
 };

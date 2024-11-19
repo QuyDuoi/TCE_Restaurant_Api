@@ -48,6 +48,7 @@ const {
   xoa_ban,
   lay_ds_ban,
   tim_kiem_ban,
+  tao_qr_code
 } = require("../controllers/banController");
 
 const {
@@ -161,6 +162,7 @@ router.put("/capNhatBan/:id", cap_nhat_ban);
 router.delete("/xoaBan/:id", xoa_ban);
 router.get("/layDsBan", lay_ds_ban);
 router.post("/timKiemBan", tim_kiem_ban);
+router.post("/taoQrCode", tao_qr_code)
 
 // Restful Api Nhóm Topping
 router.post("/themNhomTopping", them_nhom_topping);

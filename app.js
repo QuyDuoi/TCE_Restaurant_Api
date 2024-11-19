@@ -4,6 +4,7 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 const cors = require('cors');
+const fs = require('fs');
 
 var indexRouter = require("./routes/index");
 const database = require("./config/db");
@@ -33,6 +34,7 @@ app.use(
   express.static(path.join(__dirname, "public/uploads"))
 );
 app.use(cors(corsOptions));
+app.use('/qrcodes', express.static('./public/qrcodes'));
 
 app.use("/", indexRouter);
 app.use("/api", apiRouter);
@@ -43,6 +45,10 @@ database.connect();
 app.use(function (req, res, next) {
   next(createError(404));
 });
+
+if (!fs.existsSync("./public/qrcodes")) {
+  fs.mkdirSync("./public/qrcodes", { recursive: true });
+}
 
 // error handler
 app.use(function (err, req, res, next) {
