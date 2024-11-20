@@ -80,7 +80,8 @@ const {
   lay_ds_hoa_don,
   lay_ds_hoa_don_theo_id_nha_hang,
   danh_sach_hoa_don,
-  thanh_toan_hoa_don
+  thanh_toan_hoa_don,
+  thanh_toan_hoa_don_moi
 } = require("../controllers/hoaDonController");
 
 const {
@@ -162,7 +163,7 @@ router.put("/capNhatBan/:id", cap_nhat_ban);
 router.delete("/xoaBan/:id", xoa_ban);
 router.get("/layDsBan", lay_ds_ban);
 router.post("/timKiemBan", tim_kiem_ban);
-router.post("/taoQrCode", tao_qr_code)
+router.post("/taoQrCode", tao_qr_code);
 
 // Restful Api Nhóm Topping
 router.post("/themNhomTopping", them_nhom_topping);
@@ -191,6 +192,7 @@ router.delete("/xoaHoaDon/:id", xoa_hoa_don);
 router.get("/layDsHoaDon", lay_ds_hoa_don);
 router.get("/layDsHoaDonTheoNhaHang", lay_ds_hoa_don_theo_id_nha_hang);
 router.post("/thanhToanHoaDon", thanh_toan_hoa_don);
+router.post("/thanhToanHoaDonMoi", thanh_toan_hoa_don_moi);
 
 // Restful Api Ca Làm Việc
 router.post("/moCaLamViec", mo_ca_lam_viec);

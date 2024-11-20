@@ -261,3 +261,61 @@ exports.thanh_toan_hoa_don = async (req, res) => {
     return res.status(400).json({ msg: error.message });
   }
 };
+
+exports.thanh_toan_hoa_don_moi = async (req, res) => {
+  try {
+    const { chiTietHoaDons, hoaDon , id_nhaHang, _id} = req.body;
+
+    // ChiTietHoaDons là mảng chứa tất cả các món ăn được thêm vào hóa đơn
+    // hoaDon là thông tin của hóa đơn sẽ được tạo trước khi thêm chi tiết hóa đơn vào
+    // _id là id của nhân viên (Sẽ được lấy sau khi đăng nhập thành công)
+    
+    const caLamHienTai = await CaLamViec.findOne({
+      id_nhaHang: id_nhaHang,
+      ketThuc: null
+    });
+
+    if (!caLamHienTai) {
+      return res.status(404).json({
+        error: "Chưa mở ca",
+        msg: "Hiện chưa có ca làm nào được mở!"
+      });
+    };
+
+    const hoaDonMoi = new HoaDon({
+      tongGiaTri: hoaDon.tongGiaTri,
+      trangThai: hoaDon.trangThai,
+      tienGiamGia: hoaDon.tienGiamGia,
+      ghiChu: hoaDon.ghiChu,
+      hinhThucThanhToan: hoaDon.hinhThucThanhToan,
+      thoiGianRa: hoaDon.thoiGianVao,
+      id_nhanVien: _id,
+      id_caLamViec: caLamHienTai._id
+    });
+
+    const hoaDonLuu = await hoaDonMoi.save();
+
+    const danhSachChiTiet = [];
+    for (let item of chiTietHoaDons) {
+      const { id_monAn, soLuongMon, giaTien } = item;
+      const chiTietHdMoi = new ChiTietHoaDon({
+        id_hoaDon: hoaDonLuu._id, // Thêm id_hoaDon vào chi tiết hóa đơn mới
+        id_monAn: id_monAn,
+        soLuongMon: soLuongMon,
+        giaTien: giaTien,
+      });
+      const chiTietLuu = await chiTietHdMoi.save();
+      danhSachChiTiet.push(chiTietLuu);
+    }
+
+    // Trả về cả hóa đơn và danh sách chi tiết hóa đơn
+    return res.status(200).json({
+      msg: "Hóa đơn đã được tạo thành công!",
+      hoaDon: hoaDonLuu,          // Thông tin hóa đơn
+      chiTietHoaDons: danhSachChiTiet, // Danh sách chi tiết hóa đơn
+    });
+    
+  } catch (error) {
+    return res.status(400).json({msg: error.message});
+  }
+}
