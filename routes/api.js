@@ -25,7 +25,8 @@ const {
   xoa_mon_an,
   lay_ds_mon_an,
   tim_kiem_mon_an,
-  lay_danh_sach_thuc_don
+  lay_danh_sach_thuc_don,
+  cap_nhat_trang_thai_mon
 } = require("../controllers/monAnController");
 
 const {
@@ -135,6 +136,7 @@ router.post("/sapXepDanhMuc", sap_xep_vi_tri_danh_muc);
 // Restful Api Món Ăn
 router.post("/themMonAn", upload.single("anhMonAn"), them_mon_an);
 router.put("/capNhatMonAn/:id", upload.single("anhMonAn"), cap_nhat_mon_an);
+router.put("/capNhatTrangThaiMon/:id", cap_nhat_trang_thai_mon)
 router.delete("/xoaMonAn/:id", xoa_mon_an);
 router.get("/layDsMonAn", lay_ds_mon_an);
 router.get("/timKiemMonAn", tim_kiem_mon_an);

@@ -96,7 +96,7 @@ exports.cap_nhat_mon_an = async (req, res, next) => {
     // Lưu cập nhật món ăn
     const result = await monAn.save();
 
-    res.status(200).json(result);
+    res.status(200).json({result});
   } catch (error) {
     console.error("Error updating MonAn:", error);
     if (error.name === "ValidationError") {
@@ -109,6 +109,24 @@ exports.cap_nhat_mon_an = async (req, res, next) => {
       .json({ msg: "Internal server error", error: error.message });
   }
 };
+
+// Cập nhật trạng thái món ăn
+exports.cap_nhat_trang_thai_mon = async (req, res) => {
+  try {
+    const {id} = req.params;
+    const {trangThai} = req.body;
+
+    const monAn = await MonAn.findById(id);
+
+    monAn.trangThai = trangThai;
+
+    const result = await monAn.save();
+
+    return res.status(200).json(result);
+  } catch (error) {
+    return res.status(400).json({msg: error.message});
+  }
+}
 
 // Xóa món ăn
 exports.xoa_mon_an = async (req, res, next) => {
@@ -193,7 +211,7 @@ exports.lay_danh_sach_thuc_don = async (req, res, next) => {
   try {
     const { id_nhaHang } = req.query;
     if (!id_nhaHang) {
-      return res.status(400).json({ msg: "Thiếu id_nhaHang" });
+      return res.status(400).json({ msg: "Không có thông tin id_nhaHang!" });
     }
 
     // Lấy danh sách danh mục
