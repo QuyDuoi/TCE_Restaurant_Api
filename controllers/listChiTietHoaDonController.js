@@ -31,13 +31,25 @@ exports.addListChiTietHoaDon = async (req, res, next) => {
           await ChiTietHoaDon.findByIdAndDelete(checkChiTietHD._id);
         } else {
           if (checkChiTietHD.trangThai === true) {
-            const newChiTiet = new ChiTietHoaDon({
-              id_hoaDon: id_hoaDon, // Thêm id_hoaDon vào chi tiết hóa đơn mới
-              id_monAn: id_monAn,
-              soLuongMon: soLuong,
-              giaTien: giaTien,
+            const idMonAn = checkChiTietHD.id_monAn;
+            const checkTonTai = await ChiTietHoaDon.findOne({
+              id_hoaDon: checkChiTietHD.id_hoaDon,
+              trangThai: false,
+              id_monAn: idMonAn
             });
-            await newChiTiet.save();
+            if (checkTonTai) {
+              checkTonTai.soLuongMon = soLuong;
+              checkTonTai.giaTien = giaTien;
+              await checkTonTai.save();
+            } else {
+              const newChiTiet = new ChiTietHoaDon({
+                id_hoaDon: id_hoaDon, // Thêm id_hoaDon vào chi tiết hóa đơn mới
+                id_monAn: id_monAn,
+                soLuongMon: soLuong,
+                giaTien: giaTien,
+              });
+              await newChiTiet.save();
+            }
           } else {
             // Cập nhật số lượng nếu số lượng khác 0
             checkChiTietHD.soLuongMon = soLuong;
