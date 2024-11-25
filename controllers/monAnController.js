@@ -96,7 +96,7 @@ exports.cap_nhat_mon_an = async (req, res, next) => {
     // Lưu cập nhật món ăn
     const result = await monAn.save();
 
-    res.status(200).json({result});
+    res.status(200).json(result);
   } catch (error) {
     console.error("Error updating MonAn:", error);
     if (error.name === "ValidationError") {

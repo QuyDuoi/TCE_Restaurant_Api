@@ -153,19 +153,25 @@ exports.lay_chi_tiet_hoa_don_theo_ca_lam = async (req, res) => {
 
     console.log(req.query);
 
+    // Tìm ca làm việc hiện tại của nhà hàng
     const caLamViec = await CaLamViec.findOne({
       id_nhaHang: id_nhaHang,
-      ketThuc: null
-    })
+      ketThuc: null,
+    });
 
     if (!caLamViec) {
-      return res.status(400).json({ msg: "Hiện chưa có ca làm việc nào được mở!" });
+      return res
+        .status(400)
+        .json({ msg: "Hiện chưa có ca làm việc nào được mở!" });
     }
-    
+
     const id_caLamViec = caLamViec._id;
 
-    // Tìm tất cả các hóa đơn có id_caLamViec
-    const hoaDons = await HoaDon.find({ id_caLamViec }, "_id id_ban").populate({
+    // Tìm tất cả các hóa đơn có id_caLamViec và có id_ban (chỉ hóa đơn bán tại chỗ)
+    const hoaDons = await HoaDon.find(
+      { id_caLamViec, id_ban: { $ne: null } },
+      "_id id_ban"
+    ).populate({
       path: "id_ban",
       select: "tenBan id_khuVuc",
       populate: {
@@ -188,11 +194,10 @@ exports.lay_chi_tiet_hoa_don_theo_ca_lam = async (req, res) => {
     const chiTietHoaDons = await ChiTietHoaDon.find({
       id_hoaDon: { $in: hoaDonIds },
     }).populate({
-      path: "id_monAn", // Populate thông tin món ăn
+      path: "id_monAn",
       model: "MonAn",
     });
 
-    // Kiểm tra nếu không có chi tiết hóa đơn nào được tìm thấy
     if (chiTietHoaDons.length === 0) {
       return res
         .status(200)
@@ -204,26 +209,51 @@ exports.lay_chi_tiet_hoa_don_theo_ca_lam = async (req, res) => {
       const hoaDon = hoaDons.find(
         (hd) => hd._id.toString() === chiTiet.id_hoaDon.toString()
       );
+
       return {
         ...chiTiet.toObject(),
-        ban: hoaDon.id_ban, // Thêm thông tin bàn
-        khuVuc: hoaDon.id_ban.id_khuVuc, // Thêm thông tin khu vực
+        ban: hoaDon.id_ban, // Thông tin bàn
+        khuVuc: hoaDon.id_ban.id_khuVuc, // Thông tin khu vực
       };
     });
 
-    // Sắp xếp chi tiết hóa đơn theo yêu cầu
+    // Sắp xếp danh sách
     chiTietHdkvs.sort((a, b) => {
       if (a.trangThai === b.trangThai) {
         return a.trangThai
           ? new Date(b.updatedAt) - new Date(a.updatedAt) // Đã hoàn thành: mới nhất trước
           : new Date(a.createdAt) - new Date(b.createdAt); // Chưa hoàn thành: cũ nhất trước
       }
-      return a.trangThai - b.trangThai; // false (0) lên trước true (1)
+      return a.trangThai - b.trangThai; // false lên trước true
     });
 
-    return res.status(200).json(chiTietHdkvs);
+    // Phân loại dữ liệu
+    const groupedData = {
+      chuaHoanThanh: chiTietHdkvs.filter((item) => item.trangThai === false), // Chưa hoàn thành
+      hoanThanh: chiTietHdkvs.filter((item) => item.trangThai === true), // Hoàn thành
+      theoTenMon: {},
+    };
+
+    // Nhóm theo tên món
+    chiTietHdkvs.forEach((item) => {
+      const tenMon = item.id_monAn?.tenMon;
+      if (tenMon) {
+        if (!groupedData.theoTenMon[tenMon]) {
+          groupedData.theoTenMon[tenMon] = [];
+        }
+        groupedData.theoTenMon[tenMon].push(item);
+      }
+    });
+
+    // Trả về dữ liệu đã phân loại
+    return res.status(200).json(groupedData);
   } catch (error) {
-    res.status(500).json({ msg: "Lỗi server", error: error.message });
+    console.error("Lỗi khi lấy chi tiết hóa đơn:", error);
+    res.status(500).json({
+      msg: "Lỗi server",
+      error: error.message,
+      stack: error.stack,
+    });
   }
 };
 

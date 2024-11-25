@@ -189,7 +189,7 @@ exports.lay_top_5_mon_an_ban_chay = async (req, res, next) => {
     const topMonAn = await ChiTietHoaDon.aggregate([
       {
         $match: {
-          createdAt: { $gte: startDate, $lte: endDate }, // Sử dụng trường createdAt cho việc lọc theo ngày
+          createdAt: { $gte: startDate, $lte: endDate }, // Lọc theo ngày
         },
       },
       {
@@ -206,25 +206,24 @@ exports.lay_top_5_mon_an_ban_chay = async (req, res, next) => {
       },
       {
         $lookup: {
-          // Thêm thông tin chi tiết về món ăn từ bảng MonAn
-          from: "MonAn", // Bảng MonAn
-          localField: "_id",
-          foreignField: "_id",
+          from: "MonAn", // Kết nối bảng MonAn
+          localField: "_id", // ID món ăn trong bảng ChiTietHoaDon
+          foreignField: "_id", // ID món ăn trong bảng MonAn
           as: "chiTietMonAn",
         },
       },
       {
-        $unwind: "$chiTietMonAn", // Bỏ bọc mảng để dễ dàng truy xuất thông tin món ăn
+        $unwind: "$chiTietMonAn", // Mở gói mảng chiTietMonAn để dễ truy xuất
       },
       {
         $project: {
-          // Chỉ định các trường sẽ trả về
-          _id: 1,
-          tenMon: "$chiTietMonAn.tenMon", // Lấy tên món ăn từ bảng MonAn
-          soLuongMon: 1,
+          _id: 1, // ID món ăn
+          tenMon: "$chiTietMonAn.tenMon", // Tên món ăn từ bảng MonAn
+          anhMonAn: "$chiTietMonAn.anhMonAn", // Ảnh món ăn từ bảng MonAn
+          soLuongMon: 1, // Số lượng món ăn
         },
       },
-    ]);
+    ]);    
 
     res.status(200).json(topMonAn);
   } catch (error) {
