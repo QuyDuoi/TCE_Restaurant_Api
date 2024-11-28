@@ -20,6 +20,8 @@ exports.mo_ca_lam_viec = async (req, res, next) => {
     });
 
     if (checkCaLam) {
+      console.log("Check");
+
       return res
         .status(404)
         .json({ msg: "Chưa kết thúc ca làm cũ, không thể mở ca làm mới!" });
@@ -28,7 +30,7 @@ exports.mo_ca_lam_viec = async (req, res, next) => {
       const soDuHienTai = soDuBanDau;
 
       // Tạo ca làm việc mới
-      const caLamViec = new CaLamViec({
+      let caLamViec = new CaLamViec({
         batDau,
         soDuBanDau,
         soDuHienTai,
@@ -36,7 +38,13 @@ exports.mo_ca_lam_viec = async (req, res, next) => {
         id_nhaHang,
       });
 
-      const result = await caLamViec.save();
+      console.log("Pass");
+
+      caLamViec = await caLamViec.save();
+
+      const result = await CaLamViec.findById(caLamViec._id).populate(
+        "id_nhanVien"
+      );
 
       res.status(201).json(result);
     }
@@ -129,19 +137,15 @@ exports.xoa_ca_lam_viec = async (req, res, next) => {
 // Lấy danh sách ca làm việc theo nhân viên
 exports.lay_ds_ca_lam_viec = async (req, res, next) => {
   try {
-    const { id_nhanVien } = req.query;
+    const { id_nhaHang } = req.query;
 
-    // Lọc ca làm việc theo nhân viên nếu có
-    let filter = {};
-    if (id_nhanVien) {
-      filter.id_nhanVien = id_nhanVien;
-    }
-
-    const caLamViecs = await CaLamViec.find(filter)
+    const caLams = await CaLamViec.find({ id_nhaHang: id_nhaHang })
       .populate("id_nhanVien")
-      .sort({ createdAt: -1 });
+      .sort({
+        createdAt: -1,
+      });
 
-    res.status(200).json(caLamViecs);
+    res.status(200).json(caLams);
   } catch (error) {
     res.status(400).json({ msg: error.message });
   }
@@ -184,7 +188,7 @@ exports.lay_chi_tiet_hoa_don_theo_ca_lam = async (req, res) => {
     if (!hoaDons || hoaDons.length === 0) {
       return res
         .status(404)
-        .json({ msg: "Không tìm thấy hóa đơn nào cho ca làm việc này" });
+        .json({ msg: "Chưa có hóa đơn nào được tạo!" });
     }
 
     // Lấy danh sách các id_hoaDon
@@ -200,8 +204,8 @@ exports.lay_chi_tiet_hoa_don_theo_ca_lam = async (req, res) => {
 
     if (chiTietHoaDons.length === 0) {
       return res
-        .status(200)
-        .json({ msg: "Không có chi tiết hóa đơn nào trong ca làm việc này" });
+        .status(404)
+        .json({ msg: "Chưa có món ăn nào được gọi!" });
     }
 
     // Kết hợp chi tiết hóa đơn với thông tin khu vực và bàn

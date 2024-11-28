@@ -5,34 +5,52 @@ const { ChiTietHoaDon } = require("../models/chiTietHoaDonModel");
 
 // Thêm hóa đơn
 exports.them_hoa_don_moi = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
-    const { thoiGianVao, id_nhanVien, id_ban, id_caLamViec } = req.body;
+    const { thoiGianVao, id_nhanVien, id_ban, id_nhaHang } = req.body;
 
-    const caLamViec = await CaLamViec.findById(id_caLamViec);
-
+    // Kiểm tra ca làm việc
+    const caLamViec = await CaLamViec.findOne({ id_nhaHang, ketThuc: null });
     if (!caLamViec) {
-      return res.status(404).json({ msg: "Ca làm việc không tồn tại" });
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(404).json({ msg: "Vui lòng mở ca làm mới trước khi tạo hóa đơn!" });
     }
 
-    const thongTinBan = await Ban.findById(id_ban);
+    // Kiểm tra và cập nhật trạng thái bàn
+    const thongTinBan = await Ban.findOneAndUpdate(
+      { _id: id_ban, trangThai: "Trống" }, // Điều kiện: Bàn phải đang trống
+      { $set: { trangThai: "Đang sử dụng" } }, // Cập nhật trạng thái
+      { new: true, session } // Sử dụng session để đảm bảo tính nguyên tử
+    );
 
-    if (thongTinBan.trangThai === "Đang sử dụng") {
-      return res.status(404).json({
-        msg: "Bàn này đang được sử dụng, không thể tạo thêm hóa đơn!",
+    if (!thongTinBan) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({
+        msg: "Bàn này không khả dụng hoặc đã được sử dụng!",
       });
-    } else {
-      const hoaDonMoi = new HoaDon({
-        thoiGianVao,
-        id_nhanVien,
-        id_ban,
-        id_caLamViec,
-      });
-
-      const result = await hoaDonMoi.save();
-
-      res.status(201).json(result);
     }
+
+    // Tạo hóa đơn mới
+    const hoaDonMoi = new HoaDon({
+      thoiGianVao,
+      id_nhanVien,
+      id_ban,
+      id_caLamViec: caLamViec._id,
+    });
+
+    const result = await hoaDonMoi.save({ session });
+
+    // Commit transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(201).json(result);
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     res.status(400).json({ msg: error.message });
   }
 };
