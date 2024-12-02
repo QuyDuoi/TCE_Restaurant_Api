@@ -2,7 +2,7 @@ const { HoaDon } = require("../models/hoaDonModel");
 const { CaLamViec } = require("../models/caLamViecModel");
 const { Ban } = require("../models/banModel");
 const { ChiTietHoaDon } = require("../models/chiTietHoaDonModel");
-
+const mongoose = require("mongoose");
 // Thêm hóa đơn
 exports.them_hoa_don_moi = async (req, res, next) => {
   const session = await mongoose.startSession();
@@ -282,12 +282,12 @@ exports.thanh_toan_hoa_don = async (req, res) => {
 
 exports.thanh_toan_hoa_don_moi = async (req, res) => {
   try {
-    const { chiTietHoaDons, hoaDon , id_nhaHang, _id} = req.body;
+    const { chiTietHoaDons, hoaDon, id_nhaHang, _id } = req.body;
 
     // ChiTietHoaDons là mảng chứa tất cả các món ăn được thêm vào hóa đơn
     // hoaDon là thông tin của hóa đơn sẽ được tạo trước khi thêm chi tiết hóa đơn vào
     // _id là id của nhân viên (Sẽ được lấy sau khi đăng nhập thành công)
-    
+
     const caLamHienTai = await CaLamViec.findOne({
       id_nhaHang: id_nhaHang,
       ketThuc: null
@@ -332,8 +332,8 @@ exports.thanh_toan_hoa_don_moi = async (req, res) => {
       hoaDon: hoaDonLuu,          // Thông tin hóa đơn
       chiTietHoaDons: danhSachChiTiet, // Danh sách chi tiết hóa đơn
     });
-    
+
   } catch (error) {
-    return res.status(400).json({msg: error.message});
+    return res.status(400).json({ msg: error.message });
   }
 }
