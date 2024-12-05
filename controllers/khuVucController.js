@@ -6,12 +6,20 @@ exports.them_khu_vuc = async (req, res, next) => {
   try {
     const { tenKhuVuc, id_nhaHang } = req.body;
 
+    const timKhuVuc = await KhuVuc.findOne({
+      tenKhuVuc: tenKhuVuc,
+    });
+
+    if (timKhuVuc) {
+      return res.status(400).json({ msg: "Tên khu vực đã tồn tại!" });
+    }
+
     const khuVuc = new KhuVuc({ tenKhuVuc, id_nhaHang });
     const result = await khuVuc.save();
 
-    res.status(201).json(result);
+    return res.status(201).json(result);
   } catch (error) {
-    res.status(400).json({ msg: error.message });
+    return res.status(400).json({ msg: error.message });
   }
 };
 
@@ -25,13 +33,13 @@ exports.cap_nhat_khu_vuc = async (req, res, next) => {
     if (!khuVuc) {
       return res.status(404).json({ msg: "Khu vực không tồn tại" });
     }
-  // Kiểm tra và cập nhật thông tin khu vực nếu có thay đổi
-  if (tenKhuVuc !== undefined && tenKhuVuc !== khuVuc.tenKhuVuc) {
-    khuVuc.tenKhuVuc = tenKhuVuc;
-  }
-  if (id_nhaHang !== undefined && id_nhaHang !== khuVuc.id_nhaHang) {
-    khuVuc.id_nhaHang = id_nhaHang;
-  }
+    // Kiểm tra và cập nhật thông tin khu vực nếu có thay đổi
+    if (tenKhuVuc !== undefined && tenKhuVuc !== khuVuc.tenKhuVuc) {
+      khuVuc.tenKhuVuc = tenKhuVuc;
+    }
+    if (id_nhaHang !== undefined && id_nhaHang !== khuVuc.id_nhaHang) {
+      khuVuc.id_nhaHang = id_nhaHang;
+    }
 
     const result = await khuVuc.save();
 
@@ -70,7 +78,7 @@ exports.lay_ds_khu_vuc = async (req, res, next) => {
 
     // Lấy danh sách món ăn cho từng danh mục
     const khuVucVaBans = await Promise.all(
-      khuVucs.map(async khuVuc => {
+      khuVucs.map(async (khuVuc) => {
         const bans = await Ban.find({ id_khuVuc: khuVuc._id }).sort({
           createdAt: -1,
         });
@@ -79,7 +87,6 @@ exports.lay_ds_khu_vuc = async (req, res, next) => {
     );
 
     console.log(khuVucVaBans);
-    
 
     res.status(200).json(khuVucVaBans);
   } catch (error) {

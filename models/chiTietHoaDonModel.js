@@ -9,7 +9,12 @@ const chiTietHoaDonSchema = new mongoose.Schema(
     id_monAn: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "MonAn",
-      required: true,
+      required: false,
+    },
+    monAn: {
+      tenMon: { type: String, required: true },
+      anhMonAn: { type: String, required: false },
+      giaMonAn: { type: Number, required: true },
     },
     id_hoaDon: {
       type: mongoose.Schema.Types.ObjectId,

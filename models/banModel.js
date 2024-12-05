@@ -3,7 +3,7 @@ const { mongoose } = require("../config/db");
 const banSchema = new mongoose.Schema(
   {
     tenBan: { type: String, required: true },
-    sucChua: { type: String, required: true },
+    sucChua: { type: Number, required: true },
     trangThai: {
       type: String,
       enum: ["Trống", "Đang sử dụng", "Đã đặt"],

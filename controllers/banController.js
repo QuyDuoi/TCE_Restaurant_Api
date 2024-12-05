@@ -1,11 +1,15 @@
 const { Ban } = require("../models/banModel");
 const { KhuVuc } = require("../models/khuVucModel");
 const QRCode = require("qrcode");
+const { NhaHang } = require("../models/nhaHangModel");
+const { LichDatBan } = require("../models/lichDatBan");
 
 // Thêm bàn
 exports.them_ban = async (req, res, next) => {
   try {
     const { tenBan, sucChua, trangThai, ghiChu, id_khuVuc } = req.body;
+
+    console.log(req.body);
 
     // Kiểm tra xem khu vực có tồn tại không
     const khuVuc = await KhuVuc.findById(id_khuVuc);
@@ -127,16 +131,14 @@ exports.tao_qr_code = async (req, res) => {
     const { id } = req.query;
 
     console.log(id);
-    
+
     // Tìm thông tin bàn từ MongoDB
     const ban = await Ban.findById(id);
 
     console.log(ban);
-    
+
     if (!ban) {
-      return res
-        .status(404)
-        .json({ msg: "Bàn không tồn tại" });
+      return res.status(404).json({ msg: "Bàn không tồn tại" });
     }
 
     // URL hoặc nội dung bạn muốn mã hóa vào QR
@@ -159,12 +161,69 @@ exports.tao_qr_code = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res
-      .status(500)
-      .json({
-        success: false,
-        msg: "Lỗi khi tạo mã QR",
-        error: err.message,
-      });
+    res.status(500).json({
+      success: false,
+      msg: "Lỗi khi tạo mã QR",
+      error: err.message,
+    });
+  }
+};
+
+exports.tao_lich_hen = async (req, res) => {
+  try {
+    const { hoTen, thoiGian, ghiChu, id_nhaHang } = req.body;
+
+    const nhaHang = await NhaHang.findOne({ _id: id_nhaHang });
+
+    if (!nhaHang) {
+      return res.status(400).json({ msg: "Không tìm thấy nhà hàng!" });
+    }
+
+    const lichHen = new LichDatBan({ hoTen, thoiGian, ghiChu, id_nhaHang });
+    await lichHen.save();
+
+    const lichDatBans = await LichDatBan.find().sort({ createdAt: -1 });
+    return res.status(200).json(lichDatBans);
+  } catch (error) {
+    return res.status(400).json({ msg: error.message });
+  }
+};
+
+exports.lay_ds_lich_hen = async (req, res) => {
+  try {
+    const { id_nhaHang } = req.query;
+
+    const lichDatBans = await LichDatBan.find({ id_nhaHang }).sort({
+      createdAt: -1,
+    });
+
+    if (!lichDatBans) {
+      return res
+        .status(400)
+        .json({ msg: "Không có lịch đặt bàn trong nhà hàng!" });
+    } else {
+      return res.status(200).json(lichDatBans);
+    }
+  } catch (error) {
+    return res.status(400).json({ msg: error.message });
+  }
+};
+
+exports.xoa_lich_hen = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { id_nhaHang } = req.body;
+
+    const lichHen = await LichDatBan.findByIdAndDelete({ _id: id, id_nhaHang });
+
+    if (!lichHen) {
+      return res
+        .status(400)
+        .json({ msg: "Không tồn tại lịch đặt bàn trong nhà hàng!" });
+    } else {
+      return res.status(200).json({ msg: "Đã xóa lịch đặt bàn." });
+    }
+  } catch (error) {
+    return res.status(400).json({ msg: error.message });
   }
 };
