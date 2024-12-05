@@ -16,7 +16,7 @@ exports.them_hoa_don_moi = async (req, res, next) => {
       id_nhaHang: id_nhaHang,
       ketThuc: null,
     });
-    
+
     if (!caLamViec) {
       await session.abortTransaction();
       session.endSession();
@@ -295,6 +295,7 @@ exports.thanh_toan_hoa_don_moi = async (req, res) => {
     // hoaDon là thông tin của hóa đơn sẽ được tạo trước khi thêm chi tiết hóa đơn vào
     // _id là id của nhân viên (Sẽ được lấy sau khi đăng nhập thành công)
 
+    // Kiểm tra ca làm việc hiện tại
     const caLamHienTai = await CaLamViec.findOne({
       id_nhaHang: id_nhaHang,
       ketThuc: null,
@@ -307,6 +308,7 @@ exports.thanh_toan_hoa_don_moi = async (req, res) => {
       });
     }
 
+    // Tạo mới hóa đơn
     const hoaDonMoi = new HoaDon({
       tongGiaTri: hoaDon.tongGiaTri,
       trangThai: hoaDon.trangThai,
@@ -320,15 +322,41 @@ exports.thanh_toan_hoa_don_moi = async (req, res) => {
 
     const hoaDonLuu = await hoaDonMoi.save();
 
+    // Danh sách chi tiết hóa đơn
     const danhSachChiTiet = [];
+
     for (let item of chiTietHoaDons) {
-      const { id_monAn, soLuongMon, giaTien } = item;
+      const { id_monAn, tenMon, giaMonAn, soLuongMon, giaTien, ghiChu } = item;
+
+      // Lấy thông tin món ăn nếu có id_monAn
+      let monAnData = null;
+      if (id_monAn) {
+        monAnData = await MonAn.findById(id_monAn);
+        if (!monAnData) {
+          return res
+            .status(404)
+            .json({ msg: `Không tìm thấy món ăn với id ${id_monAn}` });
+        }
+      }
+
+      // Tạo chi tiết hóa đơn mới
       const chiTietHdMoi = new ChiTietHoaDon({
-        id_hoaDon: hoaDonLuu._id, // Thêm id_hoaDon vào chi tiết hóa đơn mới
-        id_monAn: id_monAn,
+        id_hoaDon: hoaDonLuu._id,
         soLuongMon: soLuongMon,
         giaTien: giaTien,
+        ghiChu: ghiChu || "",
+        monAn: monAnData
+          ? {
+              tenMon: monAnData.tenMon,
+              anhMonAn: monAnData.anhMonAn,
+              giaMonAn: monAnData.giaMonAn,
+            }
+          : {
+              tenMon: tenMon,
+              giaMonAn: giaMonAn,
+            },
       });
+
       const chiTietLuu = await chiTietHdMoi.save();
       danhSachChiTiet.push(chiTietLuu);
     }
