@@ -25,7 +25,9 @@ exports.addListChiTietHoaDon = async (req, res, next) => {
       if (id_monAn) {
         monAnData = await MonAn.findById(id_monAn);
         if (!monAnData) {
-          return res.status(404).json({ msg: `Không tìm thấy món ăn với id ${id_monAn}` });
+          return res
+            .status(404)
+            .json({ msg: `Không tìm thấy món ăn với id ${id_monAn}` });
         }
       }
 
@@ -53,6 +55,7 @@ exports.addListChiTietHoaDon = async (req, res, next) => {
           soLuongMon: soLuong,
           giaTien: giaTien,
           ghiChu: ghiChu || "",
+          id_monAn: id_monAn,
           monAn: monAnData
             ? {
                 tenMon: monAnData.tenMon,
@@ -77,4 +80,3 @@ exports.addListChiTietHoaDon = async (req, res, next) => {
     res.status(400).json({ msg: error.message });
   }
 };
-

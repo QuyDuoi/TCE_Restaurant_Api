@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const { CaLamViec } = require("../models/caLamViecModel");
 const { Ban } = require("../models/banModel");
 const { ChiTietHoaDon } = require("../models/chiTietHoaDonModel");
+const { MonAn } = require("../models/monAnModel");
 
 // Thêm hóa đơn
 exports.them_hoa_don_moi = async (req, res, next) => {
@@ -234,78 +235,102 @@ exports.danh_sach_hoa_don = async (req, res) => {
 };
 
 exports.thanh_toan_hoa_don = async (req, res) => {
+  const session = await mongoose.startSession(); // Bắt đầu session
+  session.startTransaction(); // Bắt đầu giao dịch
+
   try {
     const { id_hoaDon, tienGiamGia, hinhThucThanhToan, ghiChu, thoiGianRa } =
       req.body;
 
-    const hoaDon = await HoaDon.findById(id_hoaDon);
+    // Tìm hóa đơn
+    const hoaDon = await HoaDon.findById(id_hoaDon).session(session);
 
     if (!hoaDon) {
-      return res.status(400).json({ msg: "Hóa đơn không tồn tại!" });
-    } else if (hoaDon.trangThai === "Đã Thanh Toán") {
-      return res.status(400).json({ msg: "Hóa đơn đã được thanh toán!" });
-    } else {
-      // Lấy id ca làm của hóa đơn
-      const id_caLam = hoaDon.id_caLamViec;
-      // Lấy thông tin ca làm hiện tại
-      const caLamHienTai = await CaLamViec.findById(id_caLam);
-      // Lấy tất cả chi tiết hóa đơn của hóa đơn
-      const chiTietHoaDons = await ChiTietHoaDon.find({ id_hoaDon: id_hoaDon });
-      console.log("Các chi tiết của hóa đơn: " + chiTietHoaDons);
-
-      // Tính tổng tiền hóa đơn từ tất cả chi tiết hóa đơn
-      const tongTienHoaDon = chiTietHoaDons.reduce(
-        (total, recold) => total + recold.giaTien,
-        0
-      );
-
-      const tongGiaTriHoaDon = tongTienHoaDon - tienGiamGia;
-      // Cập nhật thông tin hóa đơn
-      hoaDon.tienGiamGia = tienGiamGia;
-      hoaDon.trangThai = "Đã Thanh Toán";
-      hoaDon.hinhThucThanhToan = hinhThucThanhToan;
-      hoaDon.ghiChu = ghiChu;
-      hoaDon.thoiGianRa = thoiGianRa;
-      hoaDon.tongGiaTri = tongGiaTriHoaDon;
-
-      const result = await hoaDon.save();
-
-      // Cập nhật tiền ca làm
-      if (hinhThucThanhToan) {
-        caLamHienTai.tongChuyenKhoan += tongGiaTriHoaDon;
-      } else {
-        caLamHienTai.tongTienMat += tongGiaTriHoaDon;
-      }
-      caLamHienTai.tongDoanhThu += tongGiaTriHoaDon;
-      caLamHienTai.soDuHienTai += tongGiaTriHoaDon;
-      await caLamHienTai.save();
-
-      return res.status(200).json(result);
+      throw new Error("Hóa đơn không tồn tại!");
     }
+
+    if (hoaDon.trangThai === "Đã Thanh Toán") {
+      throw new Error("Hóa đơn đã được thanh toán!");
+    }
+
+    // Lấy id ca làm của hóa đơn
+    const id_caLam = hoaDon.id_caLamViec;
+
+    // Lấy thông tin ca làm việc
+    const caLamHienTai = await CaLamViec.findById(id_caLam).session(session);
+
+    if (!caLamHienTai) {
+      throw new Error("Ca làm việc không tồn tại!");
+    }
+
+    // Lấy tất cả chi tiết hóa đơn
+    const chiTietHoaDons = await ChiTietHoaDon.find({
+      id_hoaDon: id_hoaDon,
+    }).session(session);
+
+    console.log("Các chi tiết của hóa đơn: " + chiTietHoaDons);
+
+    // Tính tổng tiền hóa đơn từ tất cả chi tiết
+    const tongTienHoaDon = chiTietHoaDons.reduce(
+      (total, record) => total + record.giaTien,
+      0
+    );
+
+    const tongGiaTriHoaDon = tongTienHoaDon - tienGiamGia;
+
+    // Cập nhật thông tin hóa đơn
+    hoaDon.tienGiamGia = tienGiamGia;
+    hoaDon.trangThai = "Đã Thanh Toán";
+    hoaDon.hinhThucThanhToan = hinhThucThanhToan;
+    hoaDon.ghiChu = ghiChu;
+    hoaDon.thoiGianRa = thoiGianRa;
+    hoaDon.tongGiaTri = tongGiaTriHoaDon;
+
+    await hoaDon.save({ session });
+
+    // Cập nhật tiền ca làm việc
+    if (hinhThucThanhToan) {
+      caLamHienTai.tongChuyenKhoan += tongGiaTriHoaDon;
+    } else {
+      caLamHienTai.tongTienMat += tongGiaTriHoaDon;
+    }
+    caLamHienTai.tongDoanhThu += tongGiaTriHoaDon;
+    caLamHienTai.soDuHienTai += tongGiaTriHoaDon;
+
+    await caLamHienTai.save({ session });
+
+    // Cam kết giao dịch
+    await session.commitTransaction();
+    session.endSession();
+
+    // Trả về kết quả
+    return res.status(200).json({
+      msg: "Thanh toán hóa đơn thành công!",
+      hoaDon,
+    });
   } catch (error) {
+    // Hủy giao dịch nếu có lỗi
+    await session.abortTransaction();
+    session.endSession();
     return res.status(400).json({ msg: error.message });
   }
 };
 
 exports.thanh_toan_hoa_don_moi = async (req, res) => {
+  const session = await mongoose.startSession(); // Bắt đầu session
+  session.startTransaction(); // Bắt đầu giao dịch
+
   try {
     const { chiTietHoaDons, hoaDon, id_nhaHang, _id } = req.body;
-
-    // ChiTietHoaDons là mảng chứa tất cả các món ăn được thêm vào hóa đơn
-    // hoaDon là thông tin của hóa đơn sẽ được tạo trước khi thêm chi tiết hóa đơn vào
-    // _id là id của nhân viên (Sẽ được lấy sau khi đăng nhập thành công)
 
     // Kiểm tra ca làm việc hiện tại
     const caLamHienTai = await CaLamViec.findOne({
       id_nhaHang: id_nhaHang,
       ketThuc: null,
-    });
+    }).session(session); // Gắn session vào query
 
     if (!caLamHienTai) {
-      return res.status(404).json({
-        error: "Chưa mở ca",
-        msg: "Hiện chưa có ca làm nào được mở!",
-      });
+      throw new Error("Hiện chưa có ca làm nào được mở!");
     }
 
     // Tạo mới hóa đơn
@@ -320,7 +345,7 @@ exports.thanh_toan_hoa_don_moi = async (req, res) => {
       id_caLamViec: caLamHienTai._id,
     });
 
-    const hoaDonLuu = await hoaDonMoi.save();
+    const hoaDonLuu = await hoaDonMoi.save({ session });
 
     // Danh sách chi tiết hóa đơn
     const danhSachChiTiet = [];
@@ -328,23 +353,20 @@ exports.thanh_toan_hoa_don_moi = async (req, res) => {
     for (let item of chiTietHoaDons) {
       const { id_monAn, tenMon, giaMonAn, soLuongMon, giaTien, ghiChu } = item;
 
-      // Lấy thông tin món ăn nếu có id_monAn
       let monAnData = null;
       if (id_monAn) {
-        monAnData = await MonAn.findById(id_monAn);
+        monAnData = await MonAn.findById(id_monAn).session(session);
         if (!monAnData) {
-          return res
-            .status(404)
-            .json({ msg: `Không tìm thấy món ăn với id ${id_monAn}` });
+          throw new Error(`Không tìm thấy món ăn với id ${id_monAn}`);
         }
       }
 
-      // Tạo chi tiết hóa đơn mới
       const chiTietHdMoi = new ChiTietHoaDon({
         id_hoaDon: hoaDonLuu._id,
         soLuongMon: soLuongMon,
         giaTien: giaTien,
         ghiChu: ghiChu || "",
+        id_monAn: id_monAn,
         monAn: monAnData
           ? {
               tenMon: monAnData.tenMon,
@@ -357,17 +379,49 @@ exports.thanh_toan_hoa_don_moi = async (req, res) => {
             },
       });
 
-      const chiTietLuu = await chiTietHdMoi.save();
+      const chiTietLuu = await chiTietHdMoi.save({ session });
       danhSachChiTiet.push(chiTietLuu);
     }
 
-    // Trả về cả hóa đơn và danh sách chi tiết hóa đơn
+    // Cập nhật ca làm việc với giá trị của hóa đơn mới
+    const hinhThucThanhToan = hoaDon.hinhThucThanhToan;
+
+    let updateData = {};
+    if (hinhThucThanhToan) {
+      updateData = {
+        $inc: {
+          tongChuyenKhoan: hoaDon.tongGiaTri,
+          tongDoanhThu: hoaDon.tongGiaTri,
+        },
+      };
+    } else {
+      updateData = {
+        $inc: {
+          tongTienMat: hoaDon.tongGiaTri,
+          tongDoanhThu: hoaDon.tongGiaTri,
+        },
+      };
+    }
+
+    await CaLamViec.findByIdAndUpdate(caLamHienTai._id, updateData, {
+      new: true,
+      session,
+    });
+
+    // Cam kết giao dịch
+    await session.commitTransaction();
+    session.endSession();
+
+    // Trả về kết quả
     return res.status(200).json({
       msg: "Hóa đơn đã được tạo thành công!",
-      hoaDon: hoaDonLuu, // Thông tin hóa đơn
-      chiTietHoaDons: danhSachChiTiet, // Danh sách chi tiết hóa đơn
+      hoaDon: hoaDonLuu,
+      chiTietHoaDons: danhSachChiTiet,
     });
   } catch (error) {
+    // Hủy giao dịch nếu có lỗi
+    await session.abortTransaction();
+    session.endSession();
     return res.status(400).json({ msg: error.message });
   }
 };
