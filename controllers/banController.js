@@ -5,7 +5,7 @@ const { NhaHang } = require("../models/nhaHangModel");
 const { LichDatBan } = require("../models/lichDatBan");
 
 // Thêm bàn
-exports.them_ban = async (req, res, next) => {
+exports.them_ban_va_qrcode = async (req, res, next) => {
   try {
     const { tenBan, sucChua, trangThai, ghiChu, id_khuVuc } = req.body;
 
@@ -17,11 +17,35 @@ exports.them_ban = async (req, res, next) => {
       return res.status(404).json({ msg: "Khu vực không tồn tại" });
     }
 
+    // Kiểm tra xem tên bàn đã tồn tại trong khu vực chưa
+    const existingBan = await Ban.findOne({ tenBan, id_khuVuc });
+    if (existingBan) {
+      return res.status(400).json({ msg: "Tên bàn đã tồn tại trong khu vực này" });
+    }
+
     // Tạo bàn mới
     const ban = new Ban({ tenBan, sucChua, trangThai, ghiChu, id_khuVuc });
-    const result = await ban.save();
+    const savedBan = await ban.save(); // Lưu bàn vào database
+    const idBan = savedBan._id;
 
-    res.status(201).json(result);
+    // URL hoặc nội dung bạn muốn mã hóa vào QR
+    const qrContent = `https://tce-restaurant-api.onrender.com/order?idBan=${idBan}`;
+
+    // Tạo mã QR và lưu thành file
+    const qrPath = `./public/qrcodes/qrcode_ban_${idBan}.png`;
+    await QRCode.toFile(qrPath, qrContent);
+
+    // Tạo URL của mã QR để lưu vào database
+    const qrUrl = `https://tce-restaurant-api.onrender.com/qrcodes/qrcode_ban_${idBan}.png`;
+
+    // Cập nhật URL mã QR cho bàn
+    savedBan.maQRCode = qrUrl;
+    await savedBan.save();
+
+    res.status(201).json({
+      msg: "Tạo bàn và mã QR thành công",
+      ban: savedBan,
+    });
   } catch (error) {
     res.status(400).json({ msg: error.message });
   }
@@ -126,49 +150,6 @@ exports.tim_kiem_ban = async (req, res, next) => {
   }
 };
 
-exports.tao_qr_code = async (req, res) => {
-  try {
-    const { id } = req.query;
-
-    console.log(id);
-
-    // Tìm thông tin bàn từ MongoDB
-    const ban = await Ban.findById(id);
-
-    console.log(ban);
-
-    if (!ban) {
-      return res.status(404).json({ msg: "Bàn không tồn tại" });
-    }
-
-    // URL hoặc nội dung bạn muốn mã hóa vào QR
-    const qrContent = `https://localhost:3000/order?idBan=${id}`;
-
-    // Tạo mã QR và lưu thành file
-    const qrPath = `./public/qrcodes/qrcode_ban_${id}.png`;
-    await QRCode.toFile(qrPath, qrContent);
-
-    // (Tùy chọn) Lưu URL file QR vào trường maQRCode
-    const qrUrl = `https://localhost:3000/qrcodes/qrcode_ban_${id}.png`;
-
-    // Cập nhật maQRCode của bàn
-    ban.maQRCode = qrUrl;
-    await ban.save();
-
-    res.json({
-      msg: "Mã QR đã được tạo và cập nhật",
-      maQRCode: qrUrl,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      success: false,
-      msg: "Lỗi khi tạo mã QR",
-      error: err.message,
-    });
-  }
-};
-
 exports.tao_lich_hen = async (req, res) => {
   try {
     const { hoTen, thoiGian, ghiChu, id_nhaHang } = req.body;
@@ -193,19 +174,22 @@ exports.lay_ds_lich_hen = async (req, res) => {
   try {
     const { id_nhaHang } = req.query;
 
-    const lichDatBans = await LichDatBan.find({ id_nhaHang }).sort({
-      createdAt: -1,
-    });
+    // Lấy danh sách lịch đặt bàn trong tương lai
+    const lichDatBans = await LichDatBan.find({
+      id_nhaHang,
+      ngayDat: { $gte: new Date() }, // Chỉ lấy lịch hẹn trong tương lai
+    }).sort({ ngayDat: 1 }); // Sắp xếp tăng dần theo ngày đặt
 
-    if (!lichDatBans) {
+    if (!lichDatBans || lichDatBans.length === 0) {
       return res
-        .status(400)
-        .json({ msg: "Không có lịch đặt bàn trong nhà hàng!" });
-    } else {
-      return res.status(200).json(lichDatBans);
+        .status(404)
+        .json({ msg: "Không có lịch đặt bàn nào trong thời gian tới!" });
     }
+
+    return res.status(200).json(lichDatBans);
   } catch (error) {
-    return res.status(400).json({ msg: error.message });
+    console.error("Lỗi khi lấy danh sách lịch hẹn:", error);
+    return res.status(500).json({ msg: "Lỗi server", error: error.message });
   }
 };
 

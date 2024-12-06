@@ -44,12 +44,11 @@ const {
 } = require("../controllers/khuVucController");
 
 const {
-  them_ban,
+  them_ban_va_qrcode,
   cap_nhat_ban,
   xoa_ban,
   lay_ds_ban,
   tim_kiem_ban,
-  tao_qr_code,
   tao_lich_hen,
   lay_ds_lich_hen
 } = require("../controllers/banController");
@@ -97,19 +96,9 @@ const {
 } = require("../controllers/caLamViecController");
 
 const {
-  them_thu,
-  cap_nhat_thu,
-  xoa_thu,
-  lay_ds_thu,
+  them_thu_chi,
   lay_ds_thu_chi,
-} = require("../controllers/thuController");
-
-const {
-  them_chi,
-  cap_nhat_chi,
-  xoa_chi,
-  lay_ds_chi,
-} = require("../controllers/chiController");
+} = require("../controllers/thuChiController");
 
 const {
   lay_top_5_mon_an_ban_chay,
@@ -162,12 +151,11 @@ router.delete("/xoaKhuVuc/:id", xoa_khu_vuc);
 router.get("/layDsKhuVuc", lay_ds_khu_vuc);
 
 // Restful Api Bàn
-router.post("/themBan", them_ban);
+router.post("/themBan", them_ban_va_qrcode);
 router.put("/capNhatBan/:id", cap_nhat_ban);
 router.delete("/xoaBan/:id", xoa_ban);
 router.get("/layDsBan", lay_ds_ban);
 router.post("/timKiemBan", tim_kiem_ban);
-router.post("/taoQrCode", tao_qr_code);
 router.post("/taoLichHen", tao_lich_hen);
 router.get("/layDsLichHen", lay_ds_lich_hen);
 
@@ -210,16 +198,9 @@ router.get("/layHdTheoCaLam", lay_ds_hoa_don_theo_ca_lam_viec);
 
 // Restful Api Thu
 router.post("/themThu", them_thu);
-router.put("/capNhatThu/:id", cap_nhat_thu);
 router.delete("/xoaThu/:id", xoa_thu);
 router.get("/layDsThu", lay_ds_thu);
 router.get("/layDsThuChi", lay_ds_thu_chi);
-
-// Restful Api Chi
-router.post("/themChi", them_chi);
-router.put("/capNhatChi/:id", cap_nhat_chi);
-router.delete("/xoaChi/:id", xoa_chi);
-router.get("/layDsChi", lay_ds_chi);
 
 // Restful Api Thống Kê Doanh Thu
 router.get("/thongKeDoanhThu", thongKeTongDoanhThu);
