@@ -177,8 +177,6 @@ exports.tim_kiem_mon_an = async (req, res, next) => {
     // Lấy dữ liệu từ `req.query`
     const { textSearch, id_nhaHang } = req.query;
 
-    console.log("Request Query:", req.query);
-
     // Loại bỏ dấu của từ khóa tìm kiếm
     const textSearchNoAccents = unidecode(textSearch).toLowerCase();
 

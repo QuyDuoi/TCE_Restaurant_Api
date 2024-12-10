@@ -20,7 +20,9 @@ exports.them_ban_va_qrcode = async (req, res, next) => {
     // Kiểm tra xem tên bàn đã tồn tại trong khu vực chưa
     const existingBan = await Ban.findOne({ tenBan, id_khuVuc });
     if (existingBan) {
-      return res.status(400).json({ msg: "Tên bàn đã tồn tại trong khu vực này" });
+      return res
+        .status(400)
+        .json({ msg: "Tên bàn đã tồn tại trong khu vực này" });
     }
 
     // Tạo bàn mới
@@ -36,7 +38,7 @@ exports.them_ban_va_qrcode = async (req, res, next) => {
     await QRCode.toFile(qrPath, qrContent);
 
     // Tạo URL của mã QR để lưu vào database
-    const qrUrl = `https://tce-restaurant-api.onrender.com/qrcodes/qrcode_ban_${idBan}.png`;
+    const qrUrl = `https://localhost:3000/qrcodes/qrcode_ban_${idBan}.png`;
 
     // Cập nhật URL mã QR cho bàn
     savedBan.maQRCode = qrUrl;

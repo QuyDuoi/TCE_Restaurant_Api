@@ -53,6 +53,99 @@ exports.mo_ca_lam_viec = async (req, res, next) => {
   }
 };
 
+// Check đóng ca làm
+exports.check_dong_ca_lam_viec = async (req, res) => {
+  try {
+    const { id_caLamViec } = req.body;
+
+    // Kiểm tra ca làm việc hiện tại
+    const caLamHienTai = await CaLamViec.findById(id_caLamViec);
+
+    if (!caLamHienTai) {
+      return res.status(400).json({ msg: "Không tìm thấy ca làm việc!" });
+    }
+
+    // Kiểm tra xem có hóa đơn nào chưa thanh toán trong ca làm việc này không
+    const hoaDonChuaThanhToan = await HoaDon.find({
+      id_caLamViec: id_caLamViec,
+      trangThai: "Chưa Thanh Toán",
+    });
+
+    if (hoaDonChuaThanhToan.length > 0) {
+      return res.status(400).json({
+        msg: "Không thể đóng ca làm việc! Vẫn còn hóa đơn chưa thanh toán.",
+        hoaDonChuaThanhToan: hoaDonChuaThanhToan.map((hoaDon) => ({
+          id: hoaDon._id,
+          tongGiaTri: hoaDon.tongGiaTri,
+          id_ban: hoaDon.id_ban,
+        })),
+      });
+    }
+
+    // Cập nhật thời gian kết thúc cho ca làm việc
+    caLamHienTai.ketThuc = new Date();
+    await caLamHienTai.save();
+
+    // Trả về thông tin ca làm việc đã được đóng
+    res.status(200).json({
+      msg: "Đóng ca làm việc thành công.",
+      caLamViec: caLamHienTai,
+    });
+  } catch (error) {
+    console.error("Lỗi khi đóng ca làm việc:", error);
+    return res.status(500).json({ msg: "Lỗi server", error: error.message });
+  }
+};
+
+exports.dong_ca_bat_chap = async (req, res) => {
+  try {
+    const { id_caLamViec, id_nhanVien } = req.body;
+
+    // Xác thực quyền của nhân viên
+    const nhanVien = await NhanVien.findById(id_nhanVien);
+
+    if (!nhanVien) {
+      return res.status(400).json({ msg: "Không tìm thấy nhân viên!" });
+    }
+
+    if (nhanVien.vaiTro !== "Quản lý") {
+      return res
+        .status(403)
+        .json({ msg: "Chỉ có Quản lý mới có quyền đóng ca bất chấp!" });
+    }
+
+    // Tìm ca làm việc hiện tại
+    const caLamHienTai = await CaLamViec.findById(id_caLamViec);
+
+    if (!caLamHienTai) {
+      return res.status(400).json({ msg: "Không tìm thấy ca làm việc!" });
+    }
+
+    // Xóa tất cả các hóa đơn chưa thanh toán của ca làm việc này
+    const hoaDonChuaThanhToan = await HoaDon.deleteMany({
+      id_caLamViec: id_caLamViec,
+      trangThai: "Chưa Thanh Toán",
+    });
+
+    console.log(
+      `Đã xóa ${hoaDonChuaThanhToan.deletedCount} hóa đơn chưa thanh toán.`
+    );
+
+    // Cập nhật thời gian kết thúc của ca làm việc
+    caLamHienTai.ketThuc = new Date();
+    await caLamHienTai.save();
+
+    // Trả về phản hồi thành công
+    res.status(200).json({
+      msg: "Đóng ca làm việc thành công. Các hóa đơn chưa thanh toán đã được xóa.",
+      caLamViec: caLamHienTai,
+    });
+  } catch (error) {
+    console.error("Lỗi khi đóng ca bất chấp:", error);
+    res.status(500).json({ msg: "Lỗi server", error: error.message });
+  }
+};
+
 // Cập nhật ca làm việc
 exports.cap_nhat_ca_lam_viec = async (req, res, next) => {
   try {
@@ -186,9 +279,7 @@ exports.lay_chi_tiet_hoa_don_theo_ca_lam = async (req, res) => {
     });
 
     if (!hoaDons || hoaDons.length === 0) {
-      return res
-        .status(404)
-        .json({ msg: "Chưa có hóa đơn nào được tạo!" });
+      return res.status(404).json({ msg: "Chưa có hóa đơn nào được tạo!" });
     }
 
     // Lấy danh sách các id_hoaDon
@@ -203,9 +294,7 @@ exports.lay_chi_tiet_hoa_don_theo_ca_lam = async (req, res) => {
     });
 
     if (chiTietHoaDons.length === 0) {
-      return res
-        .status(404)
-        .json({ msg: "Chưa có món ăn nào được gọi!" });
+      return res.status(404).json({ msg: "Chưa có món ăn nào được gọi!" });
     }
 
     // Kết hợp chi tiết hóa đơn với thông tin khu vực và bàn

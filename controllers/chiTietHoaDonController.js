@@ -117,9 +117,7 @@ exports.lay_ds_chi_tiet_hoa_don = async (req, res, next) => {
   try {
     const { id_hoaDon } = req.body;
 
-    const chiTietHoaDons = await ChiTietHoaDon.find({ id_hoaDon })
-      .populate("id_monAn")
-      .sort({ createdAt: -1 });
+    const chiTietHoaDons = await ChiTietHoaDon.find({ id_hoaDon }).sort({ createdAt: -1 });
 
     console.log(chiTietHoaDons);
 
