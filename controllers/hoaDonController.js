@@ -340,6 +340,7 @@ exports.thanh_toan_hoa_don_moi = async (req, res) => {
       tienGiamGia: hoaDon.tienGiamGia,
       ghiChu: hoaDon.ghiChu,
       hinhThucThanhToan: hoaDon.hinhThucThanhToan,
+      thoiGianVao: hoa.thoiGianVao,
       thoiGianRa: hoaDon.thoiGianVao,
       id_nhanVien: _id,
       id_caLamViec: caLamHienTai._id,

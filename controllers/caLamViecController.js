@@ -73,7 +73,7 @@ exports.check_dong_ca_lam_viec = async (req, res) => {
 
     if (hoaDonChuaThanhToan.length > 0) {
       return res.status(400).json({
-        msg: "Không thể đóng ca làm việc! Vẫn còn hóa đơn chưa thanh toán.",
+        msg: `Không thể đóng ca làm việc! Vẫn còn ${hoaDonChuaThanhToan.length} hóa đơn chưa thanh toán.`,
         hoaDonChuaThanhToan: hoaDonChuaThanhToan.map((hoaDon) => ({
           id: hoaDon._id,
           tongGiaTri: hoaDon.tongGiaTri,
@@ -87,10 +87,7 @@ exports.check_dong_ca_lam_viec = async (req, res) => {
     await caLamHienTai.save();
 
     // Trả về thông tin ca làm việc đã được đóng
-    res.status(200).json({
-      msg: "Đóng ca làm việc thành công.",
-      caLamViec: caLamHienTai,
-    });
+    res.status(200).json(caLamHienTai);
   } catch (error) {
     console.error("Lỗi khi đóng ca làm việc:", error);
     return res.status(500).json({ msg: "Lỗi server", error: error.message });
@@ -302,6 +299,8 @@ exports.lay_chi_tiet_hoa_don_theo_ca_lam = async (req, res) => {
       const hoaDon = hoaDons.find(
         (hd) => hd._id.toString() === chiTiet.id_hoaDon.toString()
       );
+
+      console.log(hoaDon);
 
       return {
         ...chiTiet.toObject(),

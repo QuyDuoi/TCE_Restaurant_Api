@@ -3,6 +3,8 @@ const { KhuVuc } = require("../models/khuVucModel");
 const QRCode = require("qrcode");
 const { NhaHang } = require("../models/nhaHangModel");
 const { LichDatBan } = require("../models/lichDatBan");
+const { NhanVien } = require("../models/nhanVienModel");
+const { CaLamViec } = require("../models/caLamViecModel");
 
 // Thêm bàn
 exports.them_ban_va_qrcode = async (req, res, next) => {
@@ -107,16 +109,41 @@ exports.cap_nhat_ban = async (req, res, next) => {
 exports.xoa_ban = async (req, res, next) => {
   try {
     const { id } = req.params;
+    const { id_nhanVien, id_nhaHang } = req.body;
+
+    // Kiểm tra vai trò của nhân viên
+    const nhanVien = await NhanVien.findById(id_nhanVien);
+
+    if (!nhanVien) {
+      return res.status(404).json({ msg: "Không tìm thấy nhân viên!" });
+    }
+
+    if (nhanVien.vaiTro !== "Quản lý") {
+      return res.status(403).json({ msg: "Chỉ Quản lý mới có quyền xóa bàn!" });
+    }
+
+    // Kiểm tra trạng thái của ca làm việc
+    const caLamHienTai = await CaLamViec.findOne({
+      id_nhaHang: id_nhaHang,
+      ketThuc: null,
+    });
+
+    if (caLamHienTai) {
+      return res.status(404).json({
+        msg: "Ca làm việc hiện tại chưa kết thúc, không thể xóa bàn!",
+      });
+    }
 
     // Xóa bàn theo ID
     const ban = await Ban.findByIdAndDelete(id);
     if (!ban) {
-      return res.status(404).json({ msg: "Bàn không tồn tại" });
+      return res.status(404).json({ msg: "Bàn không tồn tại!" });
     }
 
-    res.status(200).json({ msg: "Đã xóa bàn" });
+    res.status(200).json(ban);
   } catch (error) {
-    res.status(400).json({ msg: error.message });
+    console.error("Lỗi khi xóa bàn:", error);
+    res.status(500).json({ msg: "Lỗi server", error: error.message });
   }
 };
 
