@@ -28,16 +28,24 @@ exports.them_hoa_don_moi = async (req, res, next) => {
 
     // Kiểm tra và cập nhật trạng thái bàn
     const thongTinBan = await Ban.findOneAndUpdate(
-      { _id: id_ban, trangThai: "Trống" }, // Điều kiện: Bàn phải đang trống
-      { $set: { trangThai: "Đang sử dụng" } }, // Cập nhật trạng thái
-      { new: true, session } // Sử dụng session để đảm bảo tính nguyên tử
+      {
+        _id: id_ban,
+        trangThai: { $in: ["Trống", "Đã đặt"] }, // Cho phép bàn Trống hoặc Đã đặt
+      },
+      {
+        $set: { trangThai: "Đang sử dụng" }, // Cập nhật trạng thái
+      },
+      {
+        new: true,
+        session, // Sử dụng session để đảm bảo tính nguyên tử
+      }
     );
 
     if (!thongTinBan) {
       await session.abortTransaction();
       session.endSession();
       return res.status(400).json({
-        msg: "Bàn này không khả dụng hoặc đã được sử dụng!",
+        msg: "Bàn này không khả dụng hoặc đang được sử dụng!",
       });
     }
 
@@ -340,7 +348,7 @@ exports.thanh_toan_hoa_don_moi = async (req, res) => {
       tienGiamGia: hoaDon.tienGiamGia,
       ghiChu: hoaDon.ghiChu,
       hinhThucThanhToan: hoaDon.hinhThucThanhToan,
-      thoiGianVao: hoa.thoiGianVao,
+      thoiGianVao: hoaDon.thoiGianVao,
       thoiGianRa: hoaDon.thoiGianVao,
       id_nhanVien: _id,
       id_caLamViec: caLamHienTai._id,
