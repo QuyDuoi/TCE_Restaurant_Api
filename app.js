@@ -1,9 +1,5 @@
 var createError = require("http-errors");
-// Socket.io
 var express = require("express");
-const http = require('http');
-const socketIo = require('socket.io');
-
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");

@@ -5,6 +5,7 @@ const { NhaHang } = require("../models/nhaHangModel");
 const { LichDatBan } = require("../models/lichDatBan");
 const { NhanVien } = require("../models/nhanVienModel");
 const { CaLamViec } = require("../models/caLamViecModel");
+const io = require("../bin/www");
 
 // Thêm bàn
 exports.them_ban_va_qrcode = async (req, res, next) => {
@@ -77,9 +78,11 @@ exports.cap_nhat_ban = async (req, res, next) => {
     if (tenBan !== undefined && tenBan !== ban.tenBan) {
       const existingBan = await Ban.findOne({ tenBan, id_khuVuc });
       if (existingBan) {
-        return res.status(400).json({ msg: "Tên bàn đã tồn tại trong khu vực này" });
+        return res
+          .status(400)
+          .json({ msg: "Tên bàn đã tồn tại trong khu vực này" });
       }
-      ban.tenBan = tenBan;  // Cập nhật tên bàn nếu không trùng
+      ban.tenBan = tenBan; // Cập nhật tên bàn nếu không trùng
     }
 
     // Kiểm tra và cập nhật các trường khác
@@ -104,8 +107,8 @@ exports.cap_nhat_ban = async (req, res, next) => {
 
     // Lưu lại thông tin bàn đã cập nhật
     const result = await ban.save();
-    res.status(200).json(result);
 
+    res.status(200).json(result);
   } catch (error) {
     res.status(400).json({ msg: error.message });
   }

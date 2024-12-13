@@ -122,6 +122,11 @@ exports.cap_nhat_trang_thai_mon = async (req, res) => {
 
     const result = await monAn.save();
 
+    const io = req.app.get("io");
+    io.emit("doiTrangThaiMon", {
+      msg: "Đổi trạng thái món ăn!",
+    });
+
     return res.status(200).json(result);
   } catch (error) {
     return res.status(400).json({msg: error.message});
@@ -195,7 +200,7 @@ exports.tim_kiem_mon_an = async (req, res, next) => {
     const danhSachKetQua = monAns.filter((item) => {
       const tenMonNoAccents = unidecode(item.tenMon).toLowerCase();
       return tenMonNoAccents.includes(textSearchNoAccents);
-    });
+    });    
 
     res.status(200).json(danhSachKetQua);
   } catch (error) {

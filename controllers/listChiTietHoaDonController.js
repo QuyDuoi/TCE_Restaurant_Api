@@ -72,6 +72,19 @@ exports.addListChiTietHoaDon = async (req, res, next) => {
       }
     }
 
+    // Tính tổng giá trị hóa đơn
+    const chiTietList = await ChiTietHoaDon.find({ id_hoaDon });
+    const tongGiaTri = chiTietList.reduce((total, chiTiet) => total + chiTiet.giaTien, 0);
+
+    // Cập nhật tổng giá trị trong hóa đơn
+    hoaDon.tongGiaTri = tongGiaTri;
+    await hoaDon.save();
+
+    const io = req.app.get("io");
+    io.emit("lenMon", {
+      msg: "Món ăn mới được tạo!",
+    });
+
     res.status(200).json({
       msg: "Cập nhật chi tiết hóa đơn thành công",
       data: await ChiTietHoaDon.find({ id_hoaDon }), // Trả về tất cả các chi tiết của hóa đơn sau khi cập nhật

@@ -4,7 +4,6 @@ const { CaLamViec } = require("../models/caLamViecModel");
 const { Ban } = require("../models/banModel");
 const { ChiTietHoaDon } = require("../models/chiTietHoaDonModel");
 const { MonAn } = require("../models/monAnModel");
-const io = require("../bin/www");
 
 // Thêm hóa đơn
 exports.them_hoa_don_moi = async (req, res, next) => {
@@ -60,22 +59,29 @@ exports.them_hoa_don_moi = async (req, res, next) => {
 
     const result = await hoaDonMoi.save({ session });
 
-    io.emit("themHoaDon", {
-      hoaDon: result,
-      ban: thongTinBan,
-    });
-
     // Commit transaction
     await session.commitTransaction();
     session.endSession();
 
+    // Gửi thông báo qua Socket.IO
+    const io = req.app.get("io");
+    io.emit("themHoaDon", {
+      msg: "Hóa đơn mới được tạo!",
+      hoaDon: result,
+      ban: thongTinBan,
+    });
+
     res.status(201).json(result);
   } catch (error) {
-    await session.abortTransaction();
+    // Kiểm tra trạng thái của giao dịch trước khi gọi abort
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
     session.endSession();
     res.status(400).json({ msg: error.message });
   }
 };
+
 
 // Cập nhật hóa đơn
 exports.cap_nhat_hoa_don = async (req, res, next) => {
