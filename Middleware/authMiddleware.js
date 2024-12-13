@@ -1,5 +1,5 @@
 // middlewares/authMiddleware.js
-const admin = require("../config/firebase");
+const admin = require("../config/firebaseConfig");
 const { NhanVien } = require("../models/nhanVienModel");
 const jwt = require("jsonwebtoken");
 

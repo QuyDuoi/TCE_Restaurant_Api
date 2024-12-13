@@ -1,4 +1,4 @@
-// controllers/authController.js
+
 const { NhanVien } = require("../models/nhanVienModel");
 
 const checkPhoneNumber = async (req, res) => {
