@@ -4,6 +4,7 @@ const { CaLamViec } = require("../models/caLamViecModel");
 const { Ban } = require("../models/banModel");
 const { ChiTietHoaDon } = require("../models/chiTietHoaDonModel");
 const { MonAn } = require("../models/monAnModel");
+const io = require("../bin/www");
 
 // Thêm hóa đơn
 exports.them_hoa_don_moi = async (req, res, next) => {
@@ -58,6 +59,11 @@ exports.them_hoa_don_moi = async (req, res, next) => {
     });
 
     const result = await hoaDonMoi.save({ session });
+
+    io.emit("themHoaDon", {
+      hoaDon: result,
+      ban: thongTinBan,
+    });
 
     // Commit transaction
     await session.commitTransaction();

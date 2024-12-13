@@ -3,7 +3,6 @@
 /**
  * Module dependencies.
  */
-
 var app = require('../app');
 var debug = require('debug')('tce-restaurant-api:server');
 var http = require('http');
@@ -11,20 +10,56 @@ var http = require('http');
 /**
  * Get port from environment and store in Express.
  */
-
 var port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
 /**
  * Create HTTP server.
  */
-
 var server = http.createServer(app);
+
+/**
+ * Khởi tạo Socket.IO.
+ */
+var io = require('socket.io')(server, {
+  cors: {
+    origin: '*', // Cho phép tất cả các nguồn, bạn có thể giới hạn theo yêu cầu
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['my-custom-header'],
+    credentials: true,  // Nếu bạn cần gửi cookie từ frontend
+  },
+});
+
+/**
+ * Lắng nghe sự kiện "connection" từ client.
+ */
+io.on('connection', (socket) => {
+  console.log('A user connected');
+
+  // Khi client ngắt kết nối
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
+  });
+
+  // Lắng nghe sự kiện "chat message" từ client
+  socket.on('chat message', (msg) => {
+    console.log('Message received: ' + msg);
+
+    // Phát sự kiện "chat message" tới tất cả các client
+    io.emit('chat message', msg);
+  });
+
+  // Bạn có thể lắng nghe nhiều sự kiện khác từ client
+  socket.on('new order', (orderData) => {
+    console.log('New order received: ', orderData);
+    // Phát sự kiện "new order" tới tất cả các client
+    io.emit('new order', orderData);
+  });
+});
 
 /**
  * Listen on provided port, on all network interfaces.
  */
-
 server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
@@ -32,7 +67,6 @@ server.on('listening', onListening);
 /**
  * Normalize a port into a number, string, or false.
  */
-
 function normalizePort(val) {
   var port = parseInt(val, 10);
 
@@ -52,7 +86,6 @@ function normalizePort(val) {
 /**
  * Event listener for HTTP server "error" event.
  */
-
 function onError(error) {
   if (error.syscall !== 'listen') {
     throw error;
@@ -62,7 +95,7 @@ function onError(error) {
     ? 'Pipe ' + port
     : 'Port ' + port;
 
-  // handle specific listen errors with friendly messages
+  // Handle specific listen errors with friendly messages
   switch (error.code) {
     case 'EACCES':
       console.error(bind + ' requires elevated privileges');
@@ -80,7 +113,6 @@ function onError(error) {
 /**
  * Event listener for HTTP server "listening" event.
  */
-
 function onListening() {
   var addr = server.address();
   var bind = typeof addr === 'string'
@@ -88,3 +120,5 @@ function onListening() {
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
 }
+
+module.exports = io;

@@ -7,20 +7,29 @@ exports.them_nhan_vien = async (req, res, next) => {
     let hinhAnh = "";
 
     if (req.file) {
-      hinhAnh = `${req.protocol}://${req.get("host")}/public/uploads/${req.file.filename
-        }`;
+      hinhAnh = `${req.protocol}://${req.get("host")}/public/uploads/${
+        req.file.filename
+      }`;
     }
 
     // Kiểm tra nhân viên đã tồn tại hay chưa
-    const existingNhanVien = await NhanVien.findOne({ hoTen, cccd });
-    if (existingNhanVien) {
-      console.log("Ton tai");
+    const checkTenTrongNhaHang = await NhanVien.findOne({ hoTen, id_nhaHang });
+    if (checkTenTrongNhaHang) {
+      return res.status(400).json({
+        error: "hoTen",
+        msg: `Tên nhân viên ${hoTen} đã tồn tại!`,
+      });
+    }
 
-      return res
-        .status(400)
-        .json({
-          msg: `Nhân viên với tên ${hoTen} hoặc CCCD ${cccd} đã tồn tại`,
-        });
+    const checkSoDienThoai = await NhanVien.findOne({
+      soDienThoai: soDienThoai,
+    });
+
+    if (checkSoDienThoai) {
+      return res.status(400).json({
+        error: "soDienThoai",
+        msg: `Số điện thoại ${soDienThoai} đã được sử dụng!`,
+      });
     }
 
     // Thêm nhân viên mới
@@ -44,19 +53,49 @@ exports.them_nhan_vien = async (req, res, next) => {
 exports.cap_nhat_nhan_vien = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { hoTen, soDienThoai, cccd, vaiTro, trangThai, id_nhaHang } = req.body;
+    const { hoTen, soDienThoai, cccd, vaiTro, trangThai, id_nhaHang } =
+      req.body;
 
     // Tìm nhân viên theo ID
     const nhanVien = await NhanVien.findById(id);
     if (!nhanVien) {
-      return res.status(404).json({ msg: "Nhân viên không tồn tại" });
+      return res.status(404).json({ msg: "Nhân viên không tồn tại!" });
+    }
+
+    // Kiểm tra số điện thoại chỉ nếu có thay đổi
+    if (soDienThoai !== nhanVien.soDienThoai) {
+      const checkSoDienThoai = await NhanVien.findOne({
+        soDienThoai: soDienThoai,
+      });
+
+      if (checkSoDienThoai) {
+        return res.status(400).json({
+          error: "soDienThoai",
+          msg: `Số điện thoại ${soDienThoai} đã được sử dụng!`,
+        });
+      }
+    }
+
+    // Kiểm tra xem tên nhân viên đã tồn tại trong cùng nhà hàng chưa
+    const checkTen = await NhanVien.findOne({
+      hoTen: hoTen,
+      id_nhaHang: id_nhaHang,
+    });
+    if (checkTen && checkTen._id.toString() !== id) {
+      // Nếu tên đã tồn tại và không phải là nhân viên hiện tại, trả về lỗi
+      return res.status(400).json({
+        error: "hoTen",
+        msg: "Tên nhân viên đã tồn tại trong nhà hàng!",
+      });
     }
 
     // Kiểm tra xem ảnh mới có được upload hay không
     if (req.file) {
       // Nếu có ảnh mới, cập nhật đường dẫn của ảnh
-      const hinhAnh = `${req.protocol}://${req.get("host")}/public/uploads/${req.file.filename}`;
-      nhanVien.hinhAnh = hinhAnh;  // Cập nhật ảnh mới
+      const hinhAnh = `${req.protocol}://${req.get("host")}/public/uploads/${
+        req.file.filename
+      }`;
+      nhanVien.hinhAnh = hinhAnh; // Cập nhật ảnh mới
     }
 
     // Kiểm tra và cập nhật thông tin khác nếu có thay đổi
@@ -118,4 +157,3 @@ exports.lay_ds_nhan_vien = async (req, res, next) => {
     res.status(400).json({ msg: error.message });
   }
 };
-
