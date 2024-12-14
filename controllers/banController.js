@@ -108,6 +108,11 @@ exports.cap_nhat_ban = async (req, res, next) => {
     // Lưu lại thông tin bàn đã cập nhật
     const result = await ban.save();
 
+    const io = req.app.get("io");
+    io.emit("capNhatBan", {
+      msg: "Cập nhật thông tin bàn!",
+    });
+
     res.status(200).json(result);
   } catch (error) {
     res.status(400).json({ msg: error.message });
