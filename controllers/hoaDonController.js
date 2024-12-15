@@ -4,6 +4,7 @@ const { CaLamViec } = require("../models/caLamViecModel");
 const { Ban } = require("../models/banModel");
 const { ChiTietHoaDon } = require("../models/chiTietHoaDonModel");
 const { MonAn } = require("../models/monAnModel");
+const { NhanVien } = require("../models/nhanVienModel");
 
 // Thêm hóa đơn
 exports.them_hoa_don_moi = async (req, res, next) => {
@@ -17,6 +18,8 @@ exports.them_hoa_don_moi = async (req, res, next) => {
       id_nhaHang: id_nhaHang,
       ketThuc: null,
     });
+
+    const nhanVien = await NhanVien.findOne({ _id: id_nhanVien });
 
     if (!caLamViec) {
       await session.abortTransaction();
@@ -54,6 +57,7 @@ exports.them_hoa_don_moi = async (req, res, next) => {
       thoiGianVao,
       id_nhanVien,
       id_ban,
+      nhanVienTao: nhanVien.hoTen,
       id_caLamViec: caLamViec._id,
     });
 
@@ -81,7 +85,6 @@ exports.them_hoa_don_moi = async (req, res, next) => {
     res.status(400).json({ msg: error.message });
   }
 };
-
 
 // Cập nhật hóa đơn
 exports.cap_nhat_hoa_don = async (req, res, next) => {
@@ -259,8 +262,14 @@ exports.thanh_toan_hoa_don = async (req, res) => {
   session.startTransaction(); // Bắt đầu giao dịch
 
   try {
-    const { id_hoaDon, tienGiamGia, hinhThucThanhToan, ghiChu, thoiGianRa } =
-      req.body;
+    const {
+      id_hoaDon,
+      tienGiamGia,
+      hinhThucThanhToan,
+      ghiChu,
+      thoiGianRa,
+      id_nhanVien,
+    } = req.body;
 
     // Tìm hóa đơn
     const hoaDon = await HoaDon.findById(id_hoaDon).session(session);
@@ -272,6 +281,8 @@ exports.thanh_toan_hoa_don = async (req, res) => {
     if (hoaDon.trangThai === "Đã Thanh Toán") {
       throw new Error("Hóa đơn đã được thanh toán!");
     }
+
+    const nhanVien = await NhanVien.findOne({ _id: id_nhanVien });
 
     // Lấy id ca làm của hóa đơn
     const id_caLam = hoaDon.id_caLamViec;
@@ -305,6 +316,7 @@ exports.thanh_toan_hoa_don = async (req, res) => {
     hoaDon.ghiChu = ghiChu;
     hoaDon.thoiGianRa = thoiGianRa;
     hoaDon.tongGiaTri = tongGiaTriHoaDon;
+    hoaDon.nhanVienThanhToan = nhanVien.hoTen;
 
     await hoaDon.save({ session });
 
@@ -341,13 +353,15 @@ exports.thanh_toan_hoa_don_moi = async (req, res) => {
   session.startTransaction(); // Bắt đầu giao dịch
 
   try {
-    const { chiTietHoaDons, hoaDon, id_nhaHang, _id } = req.body;
+    const { chiTietHoaDons, hoaDon, id_nhaHang, id_nhanVien } = req.body;
 
     // Kiểm tra ca làm việc hiện tại
     const caLamHienTai = await CaLamViec.findOne({
       id_nhaHang: id_nhaHang,
       ketThuc: null,
     }).session(session); // Gắn session vào query
+
+    const nhanVien = await NhanVien.findOne({ _id: id_nhanVien });
 
     if (!caLamHienTai) {
       throw new Error("Hiện chưa có ca làm nào được mở!");
@@ -362,7 +376,9 @@ exports.thanh_toan_hoa_don_moi = async (req, res) => {
       hinhThucThanhToan: hoaDon.hinhThucThanhToan,
       thoiGianVao: hoaDon.thoiGianVao,
       thoiGianRa: hoaDon.thoiGianVao,
-      id_nhanVien: _id,
+      id_nhanVien: id_nhanVien,
+      nhanVienTao: nhanVien.hoTen,
+      nhanVienThanhToan: nhanVien.hoTen,
       id_caLamViec: caLamHienTai._id,
     });
 

@@ -18,6 +18,8 @@ const hoaDonSchema = new mongoose.Schema(
       ref: "NhanVien",
       required: true,
     },
+    nhanVienTao: { type: String, require: true },
+    nhanVienThanhToan: { type: String, require: false },
     id_ban: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Ban",
