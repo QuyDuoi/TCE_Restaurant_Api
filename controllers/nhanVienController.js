@@ -148,7 +148,8 @@ exports.xoa_nhan_vien = async (req, res, next) => {
 // Lấy danh sách nhân viên
 exports.lay_ds_nhan_vien = async (req, res, next) => {
   try {
-    const nhanViens = await NhanVien.find()
+    const { id_nhaHang } = req.query;
+    const nhanViens = await NhanVien.find({ id_nhaHang: id_nhaHang })
       .sort({ createdAt: -1 })
       .populate("id_nhaHang");
 
