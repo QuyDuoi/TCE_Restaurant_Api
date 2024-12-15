@@ -34,14 +34,14 @@ exports.them_ban_va_qrcode = async (req, res, next) => {
     const idBan = savedBan._id;
 
     // URL hoặc nội dung bạn muốn mã hóa vào QR
-    const qrContent = `https://tce-restaurant-api.onrender.com/order?idBan=${idBan}`;
+    const qrContent = `https://tce-restaurant-webapp.onrender.com/#/orderFood/${idBan}`;
 
     // Tạo mã QR và lưu thành file
     const qrPath = `./public/qrcodes/qrcode_ban_${idBan}.png`;
     await QRCode.toFile(qrPath, qrContent);
 
     // Tạo URL của mã QR để lưu vào database
-    const qrUrl = `https://localhost:3000/qrcodes/qrcode_ban_${idBan}.png`;
+    const qrUrl = `https://tce-restaurant-api.onrender.com/qrcodes/qrcode_ban_${idBan}.png`;
 
     // Cập nhật URL mã QR cho bàn
     savedBan.maQRCode = qrUrl;
