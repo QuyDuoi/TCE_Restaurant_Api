@@ -237,4 +237,55 @@ exports.lay_danh_sach_thuc_don = async (req, res, next) => {
   }
 };
 
+exports.tim_kiem_mon_an_web = async (req, res, next) => {
+  try {
+    // Lấy dữ liệu từ `req.query`
+    const { textSearch, id_nhaHang } = req.query;
+
+    // Kiểm tra nếu không có từ khóa tìm kiếm hoặc id nhà hàng
+    if (!textSearch || !id_nhaHang) {
+      return res.status(400).json({ msg: "Vui lòng cung cấp từ khóa tìm kiếm và id nhà hàng!" });
+    }
+
+    // Loại bỏ dấu của từ khóa tìm kiếm
+    const textSearchNoAccents = unidecode(textSearch).toLowerCase();
+
+    // 1. Lấy danh sách `id_danhMuc` thuộc nhà hàng
+    const danhMucs = await DanhMuc.find({ id_nhaHang }).sort({ thuTu: 1 });
+    const idDanhMucs = danhMucs.map((danhMuc) => danhMuc._id);
+
+    if (idDanhMucs.length === 0) {
+      return res.status(404).json({ msg: "Không tìm thấy danh mục nào!" });
+    }
+
+    // 2. Lấy tất cả các món ăn của các danh mục đã tìm được
+    const monAns = await MonAn.find({ id_danhMuc: { $in: idDanhMucs } });
+
+    // 3. Lọc danh sách món ăn dựa trên từ khóa tìm kiếm
+    const danhSachKetQua = monAns.filter((item) => {
+      const tenMonNoAccents = unidecode(item.tenMon).toLowerCase();
+      return tenMonNoAccents.includes(textSearchNoAccents);
+    });
+
+    // 4. Tìm danh mục tương ứng cho mỗi món ăn trong danhSachKetQua và trả về danh mục cùng với món ăn
+    const danhMucWithMonAn = await Promise.all(
+      danhSachKetQua.map(async (monAn) => {
+        // Tìm danh mục tương ứng với món ăn
+        const danhMuc = await DanhMuc.findOne({ _id: monAn.id_danhMuc });
+
+        // Trả về danh mục và món ăn của danh mục đó
+        return { ...danhMuc.toObject(), monAns: [monAn] };
+      })
+    );
+
+    // Trả về kết quả
+    res.status(200).json(danhMucWithMonAn);
+  } catch (error) {
+    console.error("Error occurred:", error);
+    res.status(400).json({ msg: error.message });
+  }
+};
+
+
+
 
