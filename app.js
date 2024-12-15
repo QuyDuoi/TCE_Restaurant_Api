@@ -12,7 +12,13 @@ var apiRouter = require("./routes/api");
 var authRouter = require("./routes/auth"); // Thêm dòng này
 
 const corsOptions = {
-  origin: "https://tce-restaurant-webapp.onrender.com", // React chạy trên localhost
+  origin: function (origin, callback) {
+    if (origin === "http://localhost:3000" || origin === "https://tce-restaurant-webapp.onrender.com") {
+      callback(null, true);  // Cho phép các yêu cầu từ localhost và từ webapp
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true, // Cho phép gửi cookie, nếu cần
 };
