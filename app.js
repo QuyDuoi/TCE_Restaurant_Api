@@ -12,8 +12,7 @@ var apiRouter = require("./routes/api");
 var authRouter = require("./routes/auth"); // Thêm dòng này
 
 const corsOptions = {
-  origin: "http://localhost:3000", // React chạy trên localhost
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  origin: true, // React chạy trên localhost
   credentials: true, // Cho phép gửi cookie, nếu cần
 };
 
