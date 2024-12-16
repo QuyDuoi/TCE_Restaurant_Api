@@ -44,7 +44,12 @@ const {
   lay_ds_khu_vuc,
 } = require("../controllers/khuVucController");
 
-const { dat_mon_an, kiem_tra_mat_khau, xac_nhan_dat_mon } = require("../controllers/datMonController");
+const {
+  dat_mon_an,
+  kiem_tra_mat_khau,
+  xac_nhan_dat_mon,
+  tu_choi_dat_mon,
+} = require("../controllers/datMonController");
 
 const {
   them_ban_va_qrcode,
@@ -160,6 +165,7 @@ router.get("/layDsKhuVuc", lay_ds_khu_vuc);
 router.post("/datMonAn", dat_mon_an);
 router.post("/kiemTraMatKhau", kiem_tra_mat_khau);
 router.post("/xacNhanDatMon", xac_nhan_dat_mon);
+router.post("/tuChoiDatMon", tu_choi_dat_mon);
 
 // Restful Api Bàn
 router.post("/themBan", them_ban_va_qrcode);

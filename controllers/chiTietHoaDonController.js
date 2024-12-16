@@ -86,6 +86,11 @@ exports.cap_nhat_trang_thai_cthd = async (req, res) => {
     // Đảo ngược trạng thái
     chiTietHoaDon.trangThai = !chiTietHoaDon.trangThai;
 
+    const io = req.app.get("io");
+    io.emit("hoanThanhMon", {
+      msg: "Đầu bếp vừa hoàn thành 1 món ăn!",
+    });
+
     // Lưu thay đổi
     const result = await chiTietHoaDon.save();
 
