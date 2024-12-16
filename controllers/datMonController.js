@@ -141,6 +141,7 @@ exports.xac_nhan_dat_mon = async (req, res) => {
       nhanVienTao: nhanVienXacNhan.hoTen,
       id_caLamViec: caLamHienTai._id,
       thoiGianVao: new Date(),
+      id_ban: id_ban,
     });
     const savedHoaDon = await hoaDon.save({ session });
 
