@@ -181,7 +181,7 @@ exports.xac_nhan_dat_mon = async (req, res) => {
       msg: "Cập nhật thông tin bàn!",
     });
 
-    io.to(id_ban).emit("xacNhanOrder", {
+    io.emit("xacNhanOrder", {
       msg: `Order của bạn đã được xác nhận, món ăn đang được chuẩn bị.`,
     });
 
@@ -216,7 +216,7 @@ exports.tu_choi_dat_mon = async (req, res) => {
     // 3. Lấy tên nhân viên từ ID nhân viên (giả định có model NhanVien)
     const nhanVien = await NhanVien.findById(id_nhanVien);
     const tenNhanVien = nhanVien
-      ? nhanVien.tenNhanVien
+      ? nhanVien.hoTen
       : "Nhân viên chưa xác định";
 
     // 4. Gửi thông báo đến khách hàng thông qua socket.io

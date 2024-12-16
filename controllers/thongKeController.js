@@ -202,7 +202,7 @@ exports.lay_top_5_mon_an_ban_chay = async (req, res, next) => {
         $sort: { soLuongMon: -1 }, // Sắp xếp theo số lượng giảm dần
       },
       {
-        $limit: 5, // Giới hạn lấy ra 5 bản ghi
+        $limit: 6, // Giới hạn lấy ra 5 bản ghi
       },
       {
         $lookup: {
