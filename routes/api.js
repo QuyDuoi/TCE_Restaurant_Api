@@ -44,6 +44,8 @@ const {
   lay_ds_khu_vuc,
 } = require("../controllers/khuVucController");
 
+const { dat_mon_an, kiem_tra_mat_khau, xac_nhan_dat_mon } = require("../controllers/datMonController");
+
 const {
   them_ban_va_qrcode,
   cap_nhat_ban,
@@ -153,6 +155,11 @@ router.post("/themKhuVuc", them_khu_vuc);
 router.put("/capNhatKhuVuc/:id", cap_nhat_khu_vuc);
 router.delete("/xoaKhuVuc/:id", xoa_khu_vuc);
 router.get("/layDsKhuVuc", lay_ds_khu_vuc);
+
+// Restful Api Đặt món
+router.post("/datMonAn", dat_mon_an);
+router.post("/kiemTraMatKhau", kiem_tra_mat_khau);
+router.post("/xacNhanDatMon", xac_nhan_dat_mon);
 
 // Restful Api Bàn
 router.post("/themBan", them_ban_va_qrcode);
