@@ -60,7 +60,7 @@ exports.dat_mon_an = async (req, res) => {
 
       return res
         .status(200)
-        .json({ msg: "Vui lòng đợi nhân viên xác nhận món!" });
+        .json({ msg: "Đã gửi thông tin món, hãy liên hệ nhân viên để xác nhận món!" });
     }
   } catch (error) {
     return res.status(400).json({ msg: error.message });
@@ -78,26 +78,27 @@ exports.kiem_tra_mat_khau = async (req, res) => {
     }
 
     if (checkBan.matKhau !== matKhau) {
-      return res.status(400).json({ msg: "Mật khẩu không chính xác!" });
+      return res.status(200).json(false);
     }
 
-    const matKhauOk = true;
-
-    return res.status(200).json(matKhauOk);
+    return res.status(200).json(true);
   } catch (error) {
     return res.status(400).json({ msg: error.message });
   }
 };
 
 exports.xac_nhan_dat_mon = async (req, res) => {
+  const session = await mongoose.startSession(); // Bắt đầu một session
+  session.startTransaction(); // Khởi động transaction
+
   try {
     const { id_ban, id_nhanVien } = req.body;
 
     // 1. Kiểm tra sự tồn tại và trạng thái của bàn
-    const xacNhanBan = await Ban.findById(id_ban);
+    const xacNhanBan = await Ban.findById(id_ban).session(session);
 
     if (!xacNhanBan) {
-      return res.status(400).json({ msg: "Bàn không khả dụng!" });
+      throw new Error("Bàn không khả dụng!");
     }
 
     const orders = xacNhanBan.danhSachOrder;
@@ -107,28 +108,23 @@ exports.xac_nhan_dat_mon = async (req, res) => {
       const monAn = await MonAn.findOne({
         tenMon: item.tenMon,
         giaMonAn: item.giaMonAn,
-      });
+      }).session(session);
 
       if (!monAn) {
-        return res.status(400).json({
-          msg: `Món ăn ${item.tenMon} với giá ${item.giaMonAn} không tồn tại!`,
-        });
+        throw new Error(`Món ăn ${item.tenMon} với giá ${item.giaMonAn} không tồn tại!`);
       }
 
-      // Có thể bạn muốn kiểm tra thêm các thuộc tính khác như trạng thái món ăn (còn bán hay không)
       if (!monAn.trangThai) {
-        return res
-          .status(400)
-          .json({ msg: `Món ăn ${item.tenMon} hiện tại không còn bán!` });
+        throw new Error(`Món ăn ${item.tenMon} hiện tại không còn bán!`);
       }
     }
 
-    const nhanVienXacNhan = await NhanVien.findById(id_nhanVien);
+    const nhanVienXacNhan = await NhanVien.findById(id_nhanVien).session(session);
 
     const caLamHienTai = await CaLamViec.findOne({
       id_nhaHang: nhanVienXacNhan.id_nhaHang,
       ketThuc: null,
-    });
+    }).session(session);
 
     // 3. Tạo hóa đơn mới
     const hoaDon = new HoaDon({
@@ -138,17 +134,17 @@ exports.xac_nhan_dat_mon = async (req, res) => {
       ),
       id_nhanVien: id_nhanVien,
       nhanVienTao: nhanVienXacNhan.hoTen,
-      id_caLamViec: caLamHienTai,
+      id_caLamViec: caLamHienTai._id,
       thoiGianVao: new Date(),
     });
-    const savedHoaDon = await hoaDon.save();
+    const savedHoaDon = await hoaDon.save({ session });
 
     // 4. Tạo chi tiết hóa đơn (ChiTietHoaDon) cho mỗi món trong danh sách
     for (let item of orders) {
       const monAn = await MonAn.findOne({
         tenMon: item.tenMon,
         giaMonAn: item.giaMonAn,
-      });
+      }).session(session);
 
       const chiTiet = new ChiTietHoaDon({
         soLuongMon: item.soLuong,
@@ -161,21 +157,69 @@ exports.xac_nhan_dat_mon = async (req, res) => {
         },
         id_hoaDon: savedHoaDon._id,
       });
-      await chiTiet.save(); // Lưu chi tiết hóa đơn vào cơ sở dữ liệu
+      await chiTiet.save({ session }); // Lưu chi tiết hóa đơn vào cơ sở dữ liệu
     }
 
     // 5. Cập nhật trạng thái bàn và danh sách order
     xacNhanBan.trangThai = "Đang sử dụng"; // Cập nhật trạng thái bàn
     xacNhanBan.danhSachOrder = []; // Reset danh sách order của bàn
-    await xacNhanBan.save(); // Lưu thay đổi vào cơ sở dữ liệu
+    await xacNhanBan.save({ session }); // Lưu thay đổi vào cơ sở dữ liệu
+
+    // Commit transaction nếu mọi thứ đều thành công
+    await session.commitTransaction();
+    session.endSession();
+
+    const io = req.app.get("io");
+    io.emit("capNhatBan", {
+      msg: "Cập nhật thông tin bàn!",
+    });
 
     res.status(201).json({
       msg: "Đặt món thành công, đã tạo hóa đơn!",
       hoaDon: savedHoaDon,
     });
   } catch (error) {
+    // Rollback nếu có lỗi xảy ra
+    await session.abortTransaction();
+    session.endSession();
+    console.error("Lỗi trong quá trình xử lý:", error.message);
     return res.status(400).json({ msg: error.message });
   }
 };
 
+exports.tu_choi_dat_mon = async (req, res) => {
+  try {
+    const { id_ban, id_nhanVien } = req.body;
 
+    // 1. Tìm thông tin bàn theo ID
+    const thongTinBan = await Ban.findById(id_ban);
+    if (!thongTinBan) {
+      return res.status(400).json({ msg: "Bàn không còn khả dụng!" });
+    }
+
+    // 2. Xóa thông tin danh sách order và cập nhật trạng thái order
+    thongTinBan.danhSachOrder = []; // Xóa danh sách món ăn đã order
+    thongTinBan.order = false; // Cập nhật trạng thái order về false
+    await thongTinBan.save(); // Lưu thay đổi
+
+    // 3. Lấy tên nhân viên từ ID nhân viên (giả định có model NhanVien)
+    const nhanVien = await NhanVien.findById(id_nhanVien); 
+    const tenNhanVien = nhanVien ? nhanVien.tenNhanVien : "Nhân viên chưa xác định";
+
+    // 4. Gửi thông báo đến khách hàng thông qua socket.io
+    const io = req.app.get("io");
+    io.to(id_ban).emit("huyDatMon", {
+      msg: `Order của bạn đã bị hủy bởi ${tenNhanVien}.`,
+      tenNhanVien: tenNhanVien,
+    });
+
+    // 5. Phản hồi thành công
+    return res.status(200).json({ 
+      msg: "Order đã được hủy thành công!", 
+    });
+
+    
+  } catch (error) {
+    return res.status(400).json({ msg: error.message });
+  }
+}

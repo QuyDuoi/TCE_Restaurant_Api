@@ -58,6 +58,11 @@ exports.them_ban_va_qrcode = async (req, res, next) => {
     savedBan.maQRCode = qrUrl;
     await savedBan.save();
 
+    const io = req.app.get("io");
+    io.emit("capNhatBan", {
+      msg: "Cập nhật thông tin bàn!",
+    });
+
     res.status(201).json({
       msg: "Tạo bàn và mã QR thành công",
       ban: savedBan,
