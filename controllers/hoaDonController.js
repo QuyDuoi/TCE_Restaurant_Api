@@ -5,6 +5,7 @@ const { Ban } = require("../models/banModel");
 const { ChiTietHoaDon } = require("../models/chiTietHoaDonModel");
 const { MonAn } = require("../models/monAnModel");
 const { NhanVien } = require("../models/nhanVienModel");
+const { taoMatKhau } = require("./banController");
 
 // Thêm hóa đơn
 exports.them_hoa_don_moi = async (req, res, next) => {
@@ -281,6 +282,12 @@ exports.thanh_toan_hoa_don = async (req, res) => {
     if (hoaDon.trangThai === "Đã Thanh Toán") {
       throw new Error("Hóa đơn đã được thanh toán!");
     }
+
+    const banThanhToan = await Ban.findById(hoaDon.id_ban);
+
+    banThanhToan.matKhau = taoMatKhau();
+
+    await banThanhToan.save({ session });
 
     const nhanVien = await NhanVien.findOne({ _id: id_nhanVien });
 

@@ -5,14 +5,15 @@ const { NhaHang } = require("../models/nhaHangModel");
 const { LichDatBan } = require("../models/lichDatBan");
 const { NhanVien } = require("../models/nhanVienModel");
 const { CaLamViec } = require("../models/caLamViecModel");
-const io = require("../bin/www");
+
+const taoMatKhau = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString(); // Tạo chuỗi 6 số
+};
 
 // Thêm bàn
 exports.them_ban_va_qrcode = async (req, res, next) => {
   try {
     const { tenBan, sucChua, trangThai, ghiChu, id_khuVuc } = req.body;
-
-    console.log(req.body);
 
     // Kiểm tra xem khu vực có tồn tại không
     const khuVuc = await KhuVuc.findById(id_khuVuc);
@@ -28,8 +29,18 @@ exports.them_ban_va_qrcode = async (req, res, next) => {
         .json({ msg: "Tên bàn đã tồn tại trong khu vực này" });
     }
 
+    const matKhau = taoMatKhau();
+
     // Tạo bàn mới
-    const ban = new Ban({ tenBan, sucChua, trangThai, ghiChu, id_khuVuc });
+    const ban = new Ban({
+      tenBan,
+      sucChua,
+      trangThai,
+      ghiChu,
+      matKhau,
+      id_khuVuc,
+    });
+
     const savedBan = await ban.save(); // Lưu bàn vào database
     const idBan = savedBan._id;
 

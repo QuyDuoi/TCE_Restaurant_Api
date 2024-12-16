@@ -1,7 +1,13 @@
+const { Ban } = require("../models/banModel");
 const { CaLamViec } = require("../models/caLamViecModel");
 const { ChiTietHoaDon } = require("../models/chiTietHoaDonModel");
 const { HoaDon } = require("../models/hoaDonModel");
+const { KhuVuc } = require("../models/khuVucModel");
 const { NhanVien } = require("../models/nhanVienModel");
+
+const taoMatKhau = () => {
+  return Math.floor(1000 + Math.random() * 9000).toString(); // Tạo chuỗi 6 số
+};
 
 // Thêm ca làm việc
 exports.mo_ca_lam_viec = async (req, res, next) => {
@@ -19,9 +25,27 @@ exports.mo_ca_lam_viec = async (req, res, next) => {
       ketThuc: null,
     });
 
-    if (checkCaLam) {
-      console.log("Check");
+    const khuVucs = await KhuVuc.find({ id_nhaHang: id_nhaHang });
+    if (!khuVucs.length) {
+      return res
+        .status(404)
+        .json({ msg: "Không tìm thấy khu vực nào trong nhà hàng này!" });
+    }
 
+    // 2. Lấy danh sách id_khuVuc từ các khu vực
+    const khuVucIds = khuVucs.map((khuVuc) => khuVuc._id);
+
+    // 3. Tìm tất cả bàn có id_khuVuc thuộc danh sách trên
+    const bans = await Ban.find({ id_khuVuc: { $in: khuVucIds } }).populate(
+      "id_khuVuc"
+    );
+
+    for (let ban of bans) {
+      ban.matKhau = taoMatKhau();
+      await ban.save();
+    }
+
+    if (checkCaLam) {
       return res
         .status(404)
         .json({ msg: "Chưa kết thúc ca làm cũ, không thể mở ca làm mới!" });
@@ -37,8 +61,6 @@ exports.mo_ca_lam_viec = async (req, res, next) => {
         id_nhanVien,
         id_nhaHang,
       });
-
-      console.log("Pass");
 
       caLamViec = await caLamViec.save();
 

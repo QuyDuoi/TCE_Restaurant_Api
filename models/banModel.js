@@ -11,11 +11,20 @@ const banSchema = new mongoose.Schema(
     },
     ghiChu: { type: String, required: false },
     maQRCode: { type: String, required: false },
+    matKhau: { type: String, required: true },
     id_khuVuc: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "KhuVuc",
       required: true,
     },
+    trangThaiOrder: { type: Boolean, required: false },
+    danhSachOrder: [
+      {
+        tenMon: String,
+        soLuong: Number,
+        giaMonAn: Number,
+      },
+    ],
   },
   {
     collection: "Ban",
