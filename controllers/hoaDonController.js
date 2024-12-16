@@ -374,7 +374,7 @@ exports.thanh_toan_hoa_don_moi = async (req, res) => {
     const nhanVien = await NhanVien.findOne({ _id: id_nhanVien });
 
     if (!caLamHienTai) {
-      throw new Error("Hiện chưa có ca làm nào được mở!");
+      return res.status(400).json({ msg: "Hiện chưa có ca làm nào được mở!" });
     }
 
     // Tạo mới hóa đơn
@@ -404,7 +404,7 @@ exports.thanh_toan_hoa_don_moi = async (req, res) => {
       if (id_monAn) {
         monAnData = await MonAn.findById(id_monAn).session(session);
         if (!monAnData) {
-          throw new Error(`Không tìm thấy món ăn với id ${id_monAn}`);
+          return res.status(400).json({msg: `Không tìm thấy món ăn với id ${id_monAn}`})
         }
       }
 

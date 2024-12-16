@@ -16,9 +16,10 @@ exports.dat_mon_an = async (req, res) => {
     });
 
     if (!checkCaLam) {
-      return res
-        .status(400)
-        .json({ msg: "Hiện đã ngoài giờ làm việc, không thể đặt món!" });
+      return res.status(400).json({
+        status: false,
+        msg: "Hiện đã ngoài giờ làm việc, không thể đặt món!",
+      });
     }
 
     const checkBan = await Ban.findById(id);
@@ -60,9 +61,9 @@ exports.dat_mon_an = async (req, res) => {
         msg: `Bàn ${checkBan.tenBan} có Order!`,
       });
 
-      return res
-        .status(200)
-        .json({ msg: "Đã gửi thông tin món, hãy liên hệ nhân viên để xác nhận món!" });
+      return res.status(200).json({
+        msg: "Đã gửi thông tin món, hãy liên hệ nhân viên để xác nhận món!",
+      });
     }
   } catch (error) {
     return res.status(400).json({ msg: error.message });
@@ -100,7 +101,7 @@ exports.xac_nhan_dat_mon = async (req, res) => {
     const xacNhanBan = await Ban.findById(id_ban).session(session);
 
     if (!xacNhanBan) {
-      throw new Error("Bàn không khả dụng!");
+      return res.status(400).json({msg: "Bàn không khả dụng!"});
     }
 
     const orders = xacNhanBan.danhSachOrder;
@@ -113,15 +114,17 @@ exports.xac_nhan_dat_mon = async (req, res) => {
       }).session(session);
 
       if (!monAn) {
-        throw new Error(`Món ăn ${item.tenMon} với giá ${item.giaMonAn} không tồn tại!`);
+        return res.status(400).json({msg: `Món ăn ${item.tenMon} với giá ${item.giaMonAn} không tồn tại!`});
       }
 
       if (!monAn.trangThai) {
-        throw new Error(`Món ăn ${item.tenMon} hiện tại không còn bán!`);
+        return res.status(400).json({msg: `Món ăn ${item.tenMon} hiện tại không còn bán!`});
       }
     }
 
-    const nhanVienXacNhan = await NhanVien.findById(id_nhanVien).session(session);
+    const nhanVienXacNhan = await NhanVien.findById(id_nhanVien).session(
+      session
+    );
 
     const caLamHienTai = await CaLamViec.findOne({
       id_nhaHang: nhanVienXacNhan.id_nhaHang,
@@ -177,6 +180,10 @@ exports.xac_nhan_dat_mon = async (req, res) => {
       msg: "Cập nhật thông tin bàn!",
     });
 
+    io.to(id_ban).emit("xacNhanOrder", {
+      msg: `Order của bạn đã được xác nhận, món ăn đang được chuẩn bị.`,
+    });
+
     res.status(201).json({
       msg: "Đặt món thành công, đã tạo hóa đơn!",
       hoaDon: savedHoaDon,
@@ -206,8 +213,10 @@ exports.tu_choi_dat_mon = async (req, res) => {
     await thongTinBan.save(); // Lưu thay đổi
 
     // 3. Lấy tên nhân viên từ ID nhân viên (giả định có model NhanVien)
-    const nhanVien = await NhanVien.findById(id_nhanVien); 
-    const tenNhanVien = nhanVien ? nhanVien.tenNhanVien : "Nhân viên chưa xác định";
+    const nhanVien = await NhanVien.findById(id_nhanVien);
+    const tenNhanVien = nhanVien
+      ? nhanVien.tenNhanVien
+      : "Nhân viên chưa xác định";
 
     // 4. Gửi thông báo đến khách hàng thông qua socket.io
     const io = req.app.get("io");
@@ -217,12 +226,10 @@ exports.tu_choi_dat_mon = async (req, res) => {
     });
 
     // 5. Phản hồi thành công
-    return res.status(200).json({ 
-      msg: "Order đã được hủy thành công!", 
+    return res.status(200).json({
+      msg: "Order đã được hủy thành công!",
     });
-
-    
   } catch (error) {
     return res.status(400).json({ msg: error.message });
   }
-}
+};
