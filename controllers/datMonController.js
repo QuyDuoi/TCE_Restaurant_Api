@@ -221,9 +221,9 @@ exports.tu_choi_dat_mon = async (req, res) => {
 
     // 4. Gửi thông báo đến khách hàng thông qua socket.io
     const io = req.app.get("io");
-    io.to(id_ban).emit("huyDatMon", {
+    io.emit("huyDatMon", {
       msg: `Order của bạn đã bị hủy bởi ${tenNhanVien}.`,
-      tenNhanVien: tenNhanVien,
+      id_ban: id_ban
     });
 
     // 5. Phản hồi thành công
