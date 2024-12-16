@@ -17,7 +17,7 @@ const banSchema = new mongoose.Schema(
       ref: "KhuVuc",
       required: true,
     },
-    trangThaiOrder: { type: Boolean, required: false },
+    trangThaiOrder: { type: Boolean, default: false },
     danhSachOrder: [
       {
         tenMon: String,

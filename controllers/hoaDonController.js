@@ -5,7 +5,10 @@ const { Ban } = require("../models/banModel");
 const { ChiTietHoaDon } = require("../models/chiTietHoaDonModel");
 const { MonAn } = require("../models/monAnModel");
 const { NhanVien } = require("../models/nhanVienModel");
-const { taoMatKhau } = require("./banController");
+
+const taoMatKhau = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString(); // Tạo chuỗi 6 số
+};
 
 // Thêm hóa đơn
 exports.them_hoa_don_moi = async (req, res, next) => {
