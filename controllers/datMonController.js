@@ -165,6 +165,7 @@ exports.xac_nhan_dat_mon = async (req, res) => {
     // 5. Cập nhật trạng thái bàn và danh sách order
     xacNhanBan.trangThai = "Đang sử dụng"; // Cập nhật trạng thái bàn
     xacNhanBan.danhSachOrder = []; // Reset danh sách order của bàn
+    xacNhanBan.trangThaiOrder = false;
     await xacNhanBan.save({ session }); // Lưu thay đổi vào cơ sở dữ liệu
 
     // Commit transaction nếu mọi thứ đều thành công
@@ -201,7 +202,7 @@ exports.tu_choi_dat_mon = async (req, res) => {
 
     // 2. Xóa thông tin danh sách order và cập nhật trạng thái order
     thongTinBan.danhSachOrder = []; // Xóa danh sách món ăn đã order
-    thongTinBan.order = false; // Cập nhật trạng thái order về false
+    thongTinBan.trangThaiOrder = false; // Cập nhật trạng thái order về false
     await thongTinBan.save(); // Lưu thay đổi
 
     // 3. Lấy tên nhân viên từ ID nhân viên (giả định có model NhanVien)

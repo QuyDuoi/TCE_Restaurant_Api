@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const { Ban } = require("../models/banModel");
 const { CaLamViec } = require("../models/caLamViecModel");
 const { ChiTietHoaDon } = require("../models/chiTietHoaDonModel");
@@ -77,91 +78,164 @@ exports.mo_ca_lam_viec = async (req, res, next) => {
 
 // Check đóng ca làm
 exports.check_dong_ca_lam_viec = async (req, res) => {
+  const session = await mongoose.startSession(); // Khởi tạo session để bắt đầu transaction
+  session.startTransaction(); // Bắt đầu transaction
   try {
     const { id_caLamViec } = req.body;
 
-    // Kiểm tra ca làm việc hiện tại
-    const caLamHienTai = await CaLamViec.findById(id_caLamViec);
+    // 1. Tìm ca làm việc hiện tại
+    const caLamHienTai = await CaLamViec.findById(id_caLamViec).session(
+      session
+    );
 
     if (!caLamHienTai) {
       return res.status(400).json({ msg: "Không tìm thấy ca làm việc!" });
     }
 
-    // Kiểm tra xem có hóa đơn nào chưa thanh toán trong ca làm việc này không
+    // 2. Kiểm tra xem có hóa đơn nào chưa thanh toán trong ca làm việc hay không
     const hoaDonChuaThanhToan = await HoaDon.find({
       id_caLamViec: id_caLamViec,
       trangThai: "Chưa Thanh Toán",
-    });
+    }).session(session);
 
     if (hoaDonChuaThanhToan.length > 0) {
       return res.status(400).json({
         msg: `Không thể đóng ca làm việc! Vẫn còn ${hoaDonChuaThanhToan.length} hóa đơn chưa thanh toán.`,
-        hoaDonChuaThanhToan: hoaDonChuaThanhToan.map((hoaDon) => ({
-          id: hoaDon._id,
-          tongGiaTri: hoaDon.tongGiaTri,
-          id_ban: hoaDon.id_ban,
-        })),
       });
     }
+
+    // 3. Lấy danh sách khu vực thuộc nhà hàng từ id_nhaHang
+    const khuVucList = await KhuVuc.find({ id_nhaHang: caLamHienTai.id_nhaHang }).session(session);
+
+    // Lấy danh sách id_khuVuc
+    const idKhuVucList = khuVucList.map((khuVuc) => khuVuc._id);
+
+    // Cập nhật tất cả bàn thuộc các khu vực này
+    const result = await Ban.updateMany(
+      { id_khuVuc: { $in: idKhuVucList } }, // Lọc các bàn theo id_khuVuc
+      {
+        $set: {
+          trangThai: "Trống",
+          ghiChu: "",
+          matKhau: taoMatKhau(),
+          danhSachOrder: [],
+          trangThaiOrder: false
+        },
+      },
+      { session }
+    );
+
+    console.log(result);
+
+    const io = req.app.get("io");
+    io.emit("dongCaLam", {
+      msg: "Ca làm đã đóng!",
+    });
 
     // Cập nhật thời gian kết thúc cho ca làm việc
     caLamHienTai.ketThuc = new Date();
     await caLamHienTai.save();
 
+    // Commit transaction nếu thành công
+    await session.commitTransaction();
+    session.endSession();
+
     // Trả về thông tin ca làm việc đã được đóng
     res.status(200).json(caLamHienTai);
   } catch (error) {
-    console.error("Lỗi khi đóng ca làm việc:", error);
-    return res.status(500).json({ msg: "Lỗi server", error: error.message });
+    // Rollback transaction nếu có lỗi
+    await session.abortTransaction();
+    session.endSession();
+
+    console.error("Lỗi khi đóng ca làm việc:", error.message);
+    return res.status(400).json({ msg: error.message });
   }
 };
 
 exports.dong_ca_bat_chap = async (req, res) => {
+  const session = await mongoose.startSession();
   try {
+    session.startTransaction();
+
     const { id_caLamViec, id_nhanVien } = req.body;
 
-    // Xác thực quyền của nhân viên
-    const nhanVien = await NhanVien.findById(id_nhanVien);
-
+    // 1. Xác thực quyền của nhân viên
+    const nhanVien = await NhanVien.findById(id_nhanVien).session(session);
     if (!nhanVien) {
       return res.status(400).json({ msg: "Không tìm thấy nhân viên!" });
     }
-
     if (nhanVien.vaiTro !== "Quản lý") {
       return res
         .status(403)
-        .json({ msg: "Chỉ có Quản lý mới có quyền đóng ca bất chấp!" });
+        .json({ msg: "Chỉ có Quản lý mới có quyền đóng ca!" });
     }
 
-    // Tìm ca làm việc hiện tại
-    const caLamHienTai = await CaLamViec.findById(id_caLamViec);
-
+    // 2. Tìm ca làm việc hiện tại
+    const caLamHienTai = await CaLamViec.findById(id_caLamViec).session(session);
     if (!caLamHienTai) {
       return res.status(400).json({ msg: "Không tìm thấy ca làm việc!" });
     }
 
-    // Xóa tất cả các hóa đơn chưa thanh toán của ca làm việc này
-    const hoaDonChuaThanhToan = await HoaDon.deleteMany({
-      id_caLamViec: id_caLamViec,
-      trangThai: "Chưa Thanh Toán",
-    });
-
+    // 3. Xóa tất cả hóa đơn chưa thanh toán
+    const hoaDonChuaThanhToan = await HoaDon.deleteMany(
+      {
+        id_caLamViec: id_caLamViec,
+        trangThai: "Chưa Thanh Toán",
+      },
+      { session }
+    );
     console.log(
       `Đã xóa ${hoaDonChuaThanhToan.deletedCount} hóa đơn chưa thanh toán.`
     );
 
-    // Cập nhật thời gian kết thúc của ca làm việc
-    caLamHienTai.ketThuc = new Date();
-    await caLamHienTai.save();
+    // 4. Lấy danh sách khu vực thuộc nhà hàng từ id_nhaHang trong ca làm việc
+    const khuVucList = await KhuVuc.find({
+      id_nhaHang: caLamHienTai.id_nhaHang,
+    }).session(session);
 
-    // Trả về phản hồi thành công
+    const idKhuVucList = khuVucList.map((khuVuc) => khuVuc._id);
+
+    // 5. Cập nhật trạng thái các bàn trong khu vực
+    const result = await Ban.updateMany(
+      { id_khuVuc: { $in: idKhuVucList } }, // Lọc bàn theo khu vực thuộc nhà hàng
+      {
+        $set: {
+          trangThai: "Trống",
+          ghiChu: "",
+          matKhau: taoMatKhau(),
+          danhSachOrder: [],
+        },
+      },
+      { session }
+    );
+    console.log(`Đã cập nhật ${result.modifiedCount} bàn.`);
+
+    // 6. Cập nhật thời gian kết thúc của ca làm việc
+    caLamHienTai.ketThuc = new Date();
+    await caLamHienTai.save({ session });
+
+    const io = req.app.get("io");
+    io.emit("dongCaLam", {
+      msg: "Ca làm đã đóng!",
+    });
+
+    // Commit transaction
+    await session.commitTransaction();
+
+    // 7. Trả về phản hồi thành công
     res.status(200).json({
-      msg: "Đóng ca làm việc thành công. Các hóa đơn chưa thanh toán đã được xóa.",
+      msg: "Đóng ca làm việc thành công. Các hóa đơn chưa thanh toán đã bị xóa và trạng thái bàn đã được cập nhật.",
       caLamViec: caLamHienTai,
+      hoaDonDaXoa: hoaDonChuaThanhToan.deletedCount,
+      banDaCapNhat: result.modifiedCount,
     });
   } catch (error) {
+    // Rollback nếu xảy ra lỗi
+    await session.abortTransaction();
     console.error("Lỗi khi đóng ca bất chấp:", error);
     res.status(500).json({ msg: "Lỗi server", error: error.message });
+  } finally {
+    session.endSession();
   }
 };
 
