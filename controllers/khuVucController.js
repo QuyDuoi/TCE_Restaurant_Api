@@ -86,8 +86,6 @@ exports.lay_ds_khu_vuc = async (req, res, next) => {
       })
     );
 
-    console.log(khuVucVaBans);
-
     res.status(200).json(khuVucVaBans);
   } catch (error) {
     res.status(400).json({ msg: error.message });

@@ -121,6 +121,8 @@ const {
   addListChiTietHoaDon,
 } = require("../controllers/listChiTietHoaDonController");
 
+const { lay_Danh_Sach_Tin_Nhan } = require("../controllers/tinNhanController");
+
 // Restful Api Cửa hàng
 router.post("/themNhaHang", upload.single("hinhAnh"), them_nha_hang);
 router.put("/capNhatNhaHang/:id", upload.single("hinhAnh"), cap_nhat_nha_hang);
@@ -160,6 +162,8 @@ router.post("/themKhuVuc", them_khu_vuc);
 router.put("/capNhatKhuVuc/:id", cap_nhat_khu_vuc);
 router.delete("/xoaKhuVuc/:id", xoa_khu_vuc);
 router.get("/layDsKhuVuc", lay_ds_khu_vuc);
+
+router.get("/layDsTinNhan", lay_Danh_Sach_Tin_Nhan);
 
 // Restful Api Đặt món
 router.post("/datMonAn", dat_mon_an);
