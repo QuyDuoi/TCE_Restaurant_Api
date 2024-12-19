@@ -1,6 +1,7 @@
 // config/socket.js
 const socketIo = require("socket.io");
 const { guiTinNhan } = require("../controllers/tinNhanController");
+const { TinNhan } = require("../models/tinNhanModel");
 
 module.exports = function (server) {
   const io = socketIo(server, {
