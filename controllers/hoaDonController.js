@@ -497,10 +497,6 @@ exports.lay_thong_tin_ban_va_hoa_don = async (req, res) => {
       trangThai: "Chưa Thanh Toán",
     });
 
-    if (!hoaDon) {
-      return res.status(200).json({ msg: "Không có hóa đơn nào cho bàn này" });
-    }
-
     const thongTinBan = {
       tenKhuVuc: khuVuc.tenKhuVuc,
       tenBan: ban.tenBan,
