@@ -11,10 +11,10 @@ const database = require("./config/db");
 var apiRouter = require("./routes/api");
 var authRouter = require("./routes/auth"); // Thêm dòng này
 
-// const corsOptions = {
-//   origin: true, // React chạy trên localhost
-//   credentials: true, // Cho phép gửi cookie, nếu cần
-// };
+const corsOptions = {
+  origin: true, // React chạy trên localhost
+  credentials: true, // Cho phép gửi cookie, nếu cần
+};
 
 var app = express();
 
@@ -32,7 +32,7 @@ app.use(
   "/public/uploads",
   express.static(path.join(__dirname, "public/uploads"))
 );
-// app.use(cors(corsOptions));
+app.use(cors(corsOptions));
 app.use("/qrcodes", express.static("./public/qrcodes"));
 
 app.use("/", indexRouter);
