@@ -5,6 +5,7 @@ const { Ban } = require("../models/banModel");
 const { ChiTietHoaDon } = require("../models/chiTietHoaDonModel");
 const { MonAn } = require("../models/monAnModel");
 const { NhanVien } = require("../models/nhanVienModel");
+const { KhuVuc } = require("../models/khuVucModel");
 
 const taoMatKhau = () => {
   return Math.floor(1000 + Math.random() * 9000).toString(); // Tạo chuỗi 6 số
@@ -404,7 +405,9 @@ exports.thanh_toan_hoa_don_moi = async (req, res) => {
       if (id_monAn) {
         monAnData = await MonAn.findById(id_monAn).session(session);
         if (!monAnData) {
-          return res.status(400).json({msg: `Không tìm thấy món ăn với id ${id_monAn}`})
+          return res
+            .status(400)
+            .json({ msg: `Không tìm thấy món ăn với id ${id_monAn}` });
         }
       }
 
@@ -469,6 +472,44 @@ exports.thanh_toan_hoa_don_moi = async (req, res) => {
     // Hủy giao dịch nếu có lỗi
     await session.abortTransaction();
     session.endSession();
+    return res.status(400).json({ msg: error.message });
+  }
+};
+
+exports.lay_thong_tin_ban_va_hoa_don = async (req, res) => {
+  try {
+    const { id_ban } = req.query;
+
+    const ban = await Ban.findById(id_ban);
+
+    if (!ban) {
+      return res.status(404).json({ msg: "Bàn không tồn tại" });
+    }
+
+    const khuVuc = await KhuVuc.findById(ban.id_khuVuc);
+
+    if (!khuVuc) {
+      return res.status(404).json({ msg: "Khu vực không tồn tại" });
+    }
+
+    const hoaDon = await HoaDon.findOne({
+      id_ban: id_ban,
+      trangThai: "Chưa Thanh Toán",
+    });
+
+    if (!hoaDon) {
+      return res.status(200).json({ msg: "Không có hóa đơn nào cho bàn này" });
+    }
+
+    const thongTinBan = {
+      tenKhuVuc: khuVuc.tenKhuVuc,
+      tenBan: ban.tenBan,
+      hoaDon: hoaDon,
+      id_nhaHang: khuVuc.id_nhaHang,
+    };
+
+    return res.status(200).json(thongTinBan);
+  } catch (error) {
     return res.status(400).json({ msg: error.message });
   }
 };

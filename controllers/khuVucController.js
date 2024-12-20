@@ -1,5 +1,6 @@
 const { Ban } = require("../models/banModel");
 const { KhuVuc } = require("../models/khuVucModel");
+const { TinNhan } = require("../models/tinNhanModel");
 
 // Thêm khu vực
 exports.them_khu_vuc = async (req, res, next) => {
@@ -89,5 +90,59 @@ exports.lay_ds_khu_vuc = async (req, res, next) => {
     res.status(200).json(khuVucVaBans);
   } catch (error) {
     res.status(400).json({ msg: error.message });
+  }
+};
+
+exports.lay_ds_khu_vuc_kem_tin_nhan = async (req, res, next) => {
+  try {
+    const { id_nhaHang } = req.query;
+
+    if (!id_nhaHang) {
+      return res.status(400).json({ msg: "Không có thông tin id_nhaHang!" });
+    }
+
+    // 1. Lấy tất cả các khu vực dựa trên id_nhaHang
+    const khuVucs = await KhuVuc.find({ id_nhaHang }).sort({ createdAt: -1 });
+
+    // 2. Lấy danh sách bàn cho từng khu vực
+    const khuVucVaBans = await Promise.all(
+      khuVucs.map(async (khuVuc) => {
+        const bans = await Ban.find({ id_khuVuc: khuVuc._id }).sort({
+          createdAt: -1,
+        });
+        return { ...khuVuc.toObject(), bans };
+      })
+    );
+
+    // 3. Lấy tất cả các ID của bàn để đếm số tin nhắn chưa đọc
+    const banIds = khuVucVaBans.flatMap((khuVuc) =>
+      khuVuc.bans.map((ban) => ban._id)
+    );
+
+    // 4. Sử dụng aggregation để đếm số tin nhắn chưa đọc cho từng bàn
+    const unreadCountsData = await TinNhan.aggregate([
+      {
+        $match: {
+          id_ban: { $in: banIds },
+          trangThai: false,
+        },
+      },
+      {
+        $group: {
+          _id: "$id_ban",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // 5. Chuyển đổi kết quả aggregation thành một đối tượng để dễ tra cứu
+    const unreadCounts = unreadCountsData.reduce((acc, curr) => {
+      acc[curr._id.toString()] = curr.count;
+      return acc;
+    }, {});
+
+    return res.status(200).json({ khuVucVaBans, unreadCounts });
+  } catch (error) {
+    return res.status(400).json({ msg: error.message });
   }
 };

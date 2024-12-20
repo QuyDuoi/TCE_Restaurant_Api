@@ -42,6 +42,7 @@ const {
   cap_nhat_khu_vuc,
   xoa_khu_vuc,
   lay_ds_khu_vuc,
+  lay_ds_khu_vuc_kem_tin_nhan,
 } = require("../controllers/khuVucController");
 
 const {
@@ -92,6 +93,7 @@ const {
   danh_sach_hoa_don,
   thanh_toan_hoa_don,
   thanh_toan_hoa_don_moi,
+  lay_thong_tin_ban_va_hoa_don,
 } = require("../controllers/hoaDonController");
 
 const {
@@ -162,6 +164,7 @@ router.post("/themKhuVuc", them_khu_vuc);
 router.put("/capNhatKhuVuc/:id", cap_nhat_khu_vuc);
 router.delete("/xoaKhuVuc/:id", xoa_khu_vuc);
 router.get("/layDsKhuVuc", lay_ds_khu_vuc);
+router.get("/layDsKhuVucKemTinNhan", lay_ds_khu_vuc_kem_tin_nhan);
 
 router.get("/layDsTinNhan", lay_Danh_Sach_Tin_Nhan);
 
@@ -199,6 +202,7 @@ router.delete("/xoaChiTietHoaDon/:id", xoa_chi_tiet_hoa_don);
 router.post("/layDsChiTietHoaDon", lay_ds_chi_tiet_hoa_don);
 router.put("/capNhatTrangThaiCthd/:id", cap_nhat_trang_thai_cthd);
 router.get("/layDanhSach", danh_sach_hoa_don);
+router.get("/layThongTinBanVaHoaDon", lay_thong_tin_ban_va_hoa_don);
 
 // Restful Api Hóa Đơn
 router.post("/themHoaDonMoi", them_hoa_don_moi);
