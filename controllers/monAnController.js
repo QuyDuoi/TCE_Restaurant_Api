@@ -5,8 +5,7 @@ const unidecode = require("unidecode");
 // Thêm món ăn với hình ảnh
 exports.them_mon_an = async (req, res, next) => {
   try {
-    const { tenMon, moTa, giaMonAn, trangThai, id_danhMuc, id_nhomTopping } =
-      req.body;
+    const { tenMon, moTa, giaMonAn, trangThai, id_danhMuc } = req.body;
     let anhMonAn = "";
 
     // Kiểm tra file tải lên
@@ -113,8 +112,8 @@ exports.cap_nhat_mon_an = async (req, res, next) => {
 // Cập nhật trạng thái món ăn
 exports.cap_nhat_trang_thai_mon = async (req, res) => {
   try {
-    const {id} = req.params;
-    const {trangThai} = req.body;
+    const { id } = req.params;
+    const { trangThai } = req.body;
 
     const monAn = await MonAn.findById(id);
 
@@ -129,9 +128,9 @@ exports.cap_nhat_trang_thai_mon = async (req, res) => {
 
     return res.status(200).json(result);
   } catch (error) {
-    return res.status(400).json({msg: error.message});
+    return res.status(400).json({ msg: error.message });
   }
-}
+};
 
 // Xóa món ăn
 exports.xoa_mon_an = async (req, res, next) => {
@@ -200,7 +199,7 @@ exports.tim_kiem_mon_an = async (req, res, next) => {
     const danhSachKetQua = monAns.filter((item) => {
       const tenMonNoAccents = unidecode(item.tenMon).toLowerCase();
       return tenMonNoAccents.includes(textSearchNoAccents);
-    });    
+    });
 
     res.status(200).json(danhSachKetQua);
   } catch (error) {
@@ -222,7 +221,7 @@ exports.lay_danh_sach_thuc_don = async (req, res, next) => {
 
     // Lấy danh sách món ăn cho từng danh mục
     const danhMucWithMonAn = await Promise.all(
-      danhMucs.map(async danhMuc => {
+      danhMucs.map(async (danhMuc) => {
         const monAns = await MonAn.find({ id_danhMuc: danhMuc._id }).sort({
           createdAt: -1,
         });
@@ -233,7 +232,9 @@ exports.lay_danh_sach_thuc_don = async (req, res, next) => {
     res.status(200).json(danhMucWithMonAn);
   } catch (error) {
     console.error("Error fetching DanhMuc and MonAn:", error);
-    res.status(500).json({ msg: "Internal server error", error: error.message });
+    res
+      .status(500)
+      .json({ msg: "Internal server error", error: error.message });
   }
 };
 
@@ -244,7 +245,9 @@ exports.tim_kiem_mon_an_web = async (req, res, next) => {
 
     // Kiểm tra nếu không có từ khóa tìm kiếm hoặc id nhà hàng
     if (!textSearch || !id_nhaHang) {
-      return res.status(400).json({ msg: "Vui lòng cung cấp từ khóa tìm kiếm và id nhà hàng!" });
+      return res
+        .status(400)
+        .json({ msg: "Vui lòng cung cấp từ khóa tìm kiếm và id nhà hàng!" });
     }
 
     // Loại bỏ dấu của từ khóa tìm kiếm
@@ -285,7 +288,3 @@ exports.tim_kiem_mon_an_web = async (req, res, next) => {
     res.status(400).json({ msg: error.message });
   }
 };
-
-
-
-

@@ -122,9 +122,7 @@ exports.lay_ds_chi_tiet_hoa_don = async (req, res, next) => {
   try {
     const { id_hoaDon } = req.body;
 
-    const chiTietHoaDons = await ChiTietHoaDon.find({ id_hoaDon }).sort({ createdAt: -1 });
-
-    console.log(chiTietHoaDons);
+    const chiTietHoaDons = await ChiTietHoaDon.find({ id_hoaDon }).sort({ createdAt: 1 });
 
     if (!chiTietHoaDons) {
       return res.status(400).json({ msg: "Không có chi tiết hóa đơn nào!" });
