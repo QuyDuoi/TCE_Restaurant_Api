@@ -21,6 +21,9 @@ const chiTietHoaDonSchema = new mongoose.Schema(
       ref: "HoaDon",
       required: true,
     },
+    lichSuXoa: {
+      
+    }
   },
   {
     collection: "ChiTietHoaDon",

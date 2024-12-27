@@ -1,3 +1,4 @@
+const { CaLamViec } = require("../models/caLamViecModel");
 const { DanhMuc } = require("../models/danhMucModel");
 const { MonAn } = require("../models/monAnModel");
 const unidecode = require("unidecode");
@@ -23,7 +24,6 @@ exports.them_mon_an = async (req, res, next) => {
       giaMonAn,
       trangThai,
       id_danhMuc,
-      id_nhomTopping,
     });
 
     // Lưu món ăn vào cơ sở dữ liệu
@@ -52,8 +52,7 @@ exports.them_mon_an = async (req, res, next) => {
 exports.cap_nhat_mon_an = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { tenMon, moTa, giaMonAn, trangThai, id_danhMuc, id_nhomTopping } =
-      req.body;
+    const { tenMon, moTa, giaMonAn, trangThai, id_danhMuc } = req.body;
     let anhMonAn = "";
 
     // Tìm món ăn theo ID
@@ -86,12 +85,7 @@ exports.cap_nhat_mon_an = async (req, res, next) => {
     if (id_danhMuc !== undefined && id_danhMuc !== monAn.id_danhMuc) {
       monAn.id_danhMuc = id_danhMuc;
     }
-    if (
-      id_nhomTopping !== undefined &&
-      id_nhomTopping !== monAn.id_nhomTopping
-    ) {
-      monAn.id_nhomTopping = id_nhomTopping;
-    }
+
     // Lưu cập nhật món ăn
     const result = await monAn.save();
 
@@ -136,6 +130,19 @@ exports.cap_nhat_trang_thai_mon = async (req, res) => {
 exports.xoa_mon_an = async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    const { id_nhaHang } = req.body;
+
+    const checkCaLam = await CaLamViec.findOne({
+      id_nhaHang: id_nhaHang,
+      ketThuc: null,
+    });
+
+    if (checkCaLam) {
+      return res
+        .status(404)
+        .json({ msg: "Chưa kết thúc ca làm, không thể xóa món!" });
+    }
 
     // Xóa món ăn theo ID
     const monAn = await MonAn.findByIdAndDelete(id);

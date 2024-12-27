@@ -1,11 +1,17 @@
 const { ChiTietHoaDon } = require("../models/chiTietHoaDonModel");
 const { HoaDon } = require("../models/hoaDonModel");
+const { CaLamViec } = require("../models/caLamViecModel");
 
-//thongketong
-
+// Thống kê tổng doanh thu theo nhà hàng
 exports.thongKeTongDoanhThu = async (req, res, next) => {
   try {
     let { type } = req.query; // type có thể là 'today','yesterday', '7days', '30days', 'custom'
+    const { id_nhaHang } = req.body; // Lấy id_nhaHang từ body
+
+    if (!id_nhaHang) {
+      return res.status(400).json({ msg: "Cần cung cấp id_nhaHang" });
+    }
+
     if (!type) {
       type = "today"; // Mặc định là hôm nay nếu không truyền type
     }
@@ -88,6 +94,22 @@ exports.thongKeTongDoanhThu = async (req, res, next) => {
         },
       },
       {
+        $lookup: {
+          from: "CaLamViec", // Tên collection trong MongoDB thường là số nhiều
+          localField: "id_caLamViec",
+          foreignField: "_id",
+          as: "caLamViec",
+        },
+      },
+      {
+        $unwind: "$caLamViec", // Mở gói mảng caLamViec
+      },
+      {
+        $match: {
+          "caLamViec.id_nhaHang": id_nhaHang, // Lọc theo id_nhaHang
+        },
+      },
+      {
         $group: {
           _id: null, // Nhóm tất cả kết quả lại với nhau
           tongDoanhThu: { $sum: "$tongGiaTri" }, // Tính tổng giá trị thanh toán
@@ -112,7 +134,13 @@ exports.thongKeTongDoanhThu = async (req, res, next) => {
 //top5
 exports.lay_top_5_mon_an_ban_chay = async (req, res, next) => {
   try {
-    let { type } = req.query; // type có thể là 'today','yesterday', '7days', '30days', 'custom'
+    let { type } = req.query;
+    const { id_nhaHang } = req.body;
+
+    if (!id_nhaHang) {
+      return res.status(400).json({ msg: "Cần cung cấp id_nhaHang" });
+    }
+
     if (!type) {
       type = "today"; // Mặc định là hôm nay nếu không truyền type
     }
@@ -183,13 +211,39 @@ exports.lay_top_5_mon_an_ban_chay = async (req, res, next) => {
       default:
         return res.status(400).json({ msg: "Loại thống kê không hợp lệ" });
     }
-    console.log("startDate", startDate);
-    console.log("endDate", endDate);
 
     const topMonAn = await ChiTietHoaDon.aggregate([
       {
         $match: {
           createdAt: { $gte: startDate, $lte: endDate }, // Lọc theo ngày
+        },
+      },
+      {
+        $lookup: {
+          from: "HoaDon", // Tên collection trong MongoDB thường là số nhiều
+          localField: "id_hoaDon", // Giả sử trường liên kết trong ChiTietHoaDon
+          foreignField: "_id",
+          as: "hoaDon",
+        },
+      },
+      {
+        $unwind: "$hoaDon", // Mở gói mảng hoaDon
+      },
+      {
+        $lookup: {
+          from: "CaLamViec",
+          localField: "hoaDon.id_caLamViec",
+          foreignField: "_id",
+          as: "caLamViec",
+        },
+      },
+      {
+        $unwind: "$caLamViec",
+      },
+      {
+        $match: {
+          "caLamViec.id_nhaHang": mongoose.Types.ObjectId(id_nhaHang), // Lọc theo id_nhaHang
+          "hoaDon.trangThai": "Đã Thanh Toán",
         },
       },
       {
@@ -206,9 +260,9 @@ exports.lay_top_5_mon_an_ban_chay = async (req, res, next) => {
       },
       {
         $lookup: {
-          from: "MonAn", // Kết nối bảng MonAn
-          localField: "_id", // ID món ăn trong bảng ChiTietHoaDon
-          foreignField: "_id", // ID món ăn trong bảng MonAn
+          from: "MonAn", // Tên collection trong MongoDB thường là số nhiều
+          localField: "_id",
+          foreignField: "_id",
           as: "chiTietMonAn",
         },
       },
@@ -223,7 +277,7 @@ exports.lay_top_5_mon_an_ban_chay = async (req, res, next) => {
           soLuongMon: 1, // Số lượng món ăn
         },
       },
-    ]);    
+    ]);
 
     res.status(200).json(topMonAn);
   } catch (error) {
@@ -234,13 +288,20 @@ exports.lay_top_5_mon_an_ban_chay = async (req, res, next) => {
 //doi thanh tra ve tong tien mat va tong ck
 exports.thong_ke_hinh_thuc_thanh_toan = async (req, res, next) => {
   try {
-    let { type, hinhThucThanhToan } = req.query; // type có thể là 'today','yesterday', '7days', '30days', 'custom'
+    let { type, hinhThucThanhToan } = req.query;
+    const { id_nhaHang } = req.body;
 
+    if (!id_nhaHang) {
+      return res.status(400).json({ msg: "Cần cung cấp id_nhaHang" });
+    }
+
+    // Chuyển đổi hinhThucThanhToan từ string sang boolean
     if (hinhThucThanhToan === "true") {
       hinhThucThanhToan = true;
     } else if (hinhThucThanhToan === "false") {
       hinhThucThanhToan = false;
     }
+
     if (!type) {
       type = "today"; // Mặc định là hôm nay nếu không truyền type
     }
@@ -311,14 +372,29 @@ exports.thong_ke_hinh_thuc_thanh_toan = async (req, res, next) => {
       default:
         return res.status(400).json({ msg: "Loại thống kê không hợp lệ" });
     }
-    console.log("startDate", hinhThucThanhToan);
 
-    // Lấy tổng Tiền Mặt và Chuyển Khoản
+    // Lấy tổng Tiền Mặt và Chuyển Khoản theo nhà hàng
     const thongKeHTTT = await HoaDon.aggregate([
       {
         $match: {
           trangThai: "Đã Thanh Toán",
           createdAt: { $gte: startDate, $lte: endDate }, // Lọc các hóa đơn theo ngày
+        },
+      },
+      {
+        $lookup: {
+          from: "CaLamViec",
+          localField: "id_caLamViec",
+          foreignField: "_id",
+          as: "caLamViec",
+        },
+      },
+      {
+        $unwind: "$caLamViec",
+      },
+      {
+        $match: {
+          "caLamViec.id_nhaHang": mongoose.Types.ObjectId(id_nhaHang), // Lọc theo id_nhaHang
         },
       },
       {
@@ -353,9 +429,13 @@ exports.thong_ke_hinh_thuc_thanh_toan = async (req, res, next) => {
 
 exports.thongKeDoanhThuTheoNguon = async (req, res, next) => {
   try {
-    let { type } = req.query; // type có thể là 'today','yesterday', '7days', '30days', 'custom', 'choiseDay'
+    let { type } = req.query;
+    const { id_nhaHang } = req.body;
 
-    // Kiểm tra type
+    if (!id_nhaHang) {
+      return res.status(400).json({ msg: "Cần cung cấp id_nhaHang" });
+    }
+
     if (!type) {
       type = "today"; // Mặc định là hôm nay nếu không truyền type
     }
@@ -428,12 +508,28 @@ exports.thongKeDoanhThuTheoNguon = async (req, res, next) => {
         return res.status(400).json({ msg: "Loại thống kê không hợp lệ" });
     }
 
-    // Truy vấn thống kê dựa trên id_ban
+    // Truy vấn thống kê dựa trên id_nhaHang và nguồn bán hàng
     const thongKeNguon = await HoaDon.aggregate([
       {
         $match: {
           trangThai: "Đã Thanh Toán", // Chỉ tính hóa đơn đã thanh toán
           createdAt: { $gte: startDate, $lte: endDate }, // Lọc theo ngày
+        },
+      },
+      {
+        $lookup: {
+          from: "CaLamViec",
+          localField: "id_caLamViec",
+          foreignField: "_id",
+          as: "caLamViec",
+        },
+      },
+      {
+        $unwind: "$caLamViec",
+      },
+      {
+        $match: {
+          "caLamViec.id_nhaHang": mongoose.Types.ObjectId(id_nhaHang), // Lọc theo id_nhaHang
         },
       },
       {

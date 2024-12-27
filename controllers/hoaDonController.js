@@ -336,9 +336,9 @@ exports.thanh_toan_hoa_don = async (req, res) => {
       caLamHienTai.tongChuyenKhoan += tongGiaTriHoaDon;
     } else {
       caLamHienTai.tongTienMat += tongGiaTriHoaDon;
+      caLamHienTai.soDuHienTai += tongGiaTriHoaDon;
     }
     caLamHienTai.tongDoanhThu += tongGiaTriHoaDon;
-    caLamHienTai.soDuHienTai += tongGiaTriHoaDon;
 
     await caLamHienTai.save({ session });
 
