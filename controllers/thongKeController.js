@@ -1,140 +1,82 @@
+const mongoose = require("mongoose");
 const { ChiTietHoaDon } = require("../models/chiTietHoaDonModel");
 const { HoaDon } = require("../models/hoaDonModel");
 const { CaLamViec } = require("../models/caLamViecModel");
 
-// Thống kê tổng doanh thu theo nhà hàng
-exports.thongKeTongDoanhThu = async (req, res, next) => {
-  try {
-    let { type } = req.query; // type có thể là 'today','yesterday', '7days', '30days', 'custom'
-    const { id_nhaHang } = req.body; // Lấy id_nhaHang từ body
+const getDateRange = (type, req) => {
+  let startDate, endDate;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Start of today
 
-    if (!id_nhaHang) {
-      return res.status(400).json({ msg: "Cần cung cấp id_nhaHang" });
-    }
+  switch (type) {
+    case "today":
+      startDate = new Date(today);
+      endDate = new Date(today);
+      endDate.setHours(23, 59, 59, 999);
+      break;
 
-    if (!type) {
-      type = "today"; // Mặc định là hôm nay nếu không truyền type
-    }
-    let startDate, endDate;
+    case "yesterday":
+      startDate = new Date(today);
+      startDate.setDate(startDate.getDate() - 1);
+      endDate = new Date(startDate);
+      endDate.setHours(23, 59, 59, 999);
+      break;
 
-    // Xác định ngày bắt đầu và kết thúc dựa trên loại thống kê
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Thiết lập thời gian bắt đầu của ngày hôm nay
+    case "7days":
+      startDate = new Date(today);
+      startDate.setDate(startDate.getDate() - 6); // Includes today
+      endDate = new Date(today);
+      endDate.setHours(23, 59, 59, 999);
+      break;
 
-    switch (type) {
-      case "today":
-        startDate = new Date(today);
-        endDate = new Date(today);
-        endDate.setHours(23, 59, 59, 999); // Kết thúc ngày hôm nay
-        break;
-      case "yesterday":
-        startDate = new Date(today);
-        startDate.setDate(startDate.getDate() - 1); // Ngày hôm qua
-        endDate = new Date(startDate);
-        endDate.setHours(23, 59, 59, 999); // Kết thúc ngày hôm qua
-        break;
-      case "7days":
-        startDate = new Date(today);
-        startDate.setDate(startDate.getDate() - 6); // Bắt đầu từ 7 ngày trước
-        endDate = new Date(today);
-        endDate.setHours(23, 59, 59, 999); // Kết thúc vào cuối ngày hôm nay
-        break;
-      case "30days":
-        startDate = new Date(today);
-        startDate.setDate(startDate.getDate() - 29); // Bắt đầu từ 30 ngày trước
-        endDate = new Date(today);
-        endDate.setHours(23, 59, 59, 999); // Kết thúc vào cuối ngày hôm nay
-        break;
-      case "lastMonth":
-        const firstDayLastMonth = new Date(
-          today.getFullYear(),
-          today.getMonth() - 1,
-          1
-        ); // Ngày đầu tiên của tháng trước
-        const lastDayLastMonth = new Date(
-          today.getFullYear(),
-          today.getMonth(),
-          0
-        ); // Ngày cuối cùng của tháng trước
-        startDate = firstDayLastMonth;
-        endDate = lastDayLastMonth;
-        endDate.setHours(23, 59, 59, 999); // Đặt thời điểm cuối ngày
-        break;
-      case "custom":
-        startDate = new Date(req.query.startDate);
-        endDate = new Date(req.query.endDate);
-        if (!startDate || !endDate) {
-          return res.status(400).json({
-            msg: "Cần cung cấp ngày bắt đầu và kết thúc cho loại thống kê tùy chỉnh",
-          });
-        }
-        break;
-      case "choiceDay":
-        const choiceDay = new Date(req.query.choiceDay);
-        if (!choiceDay || isNaN(choiceDay.getTime())) {
-          return res.status(400).json({ msg: "Ngày không hợp lệ" });
-        }
-        startDate = new Date(choiceDay);
-        startDate.setHours(0, 0, 0, 0); // Thời gian bắt đầu
-        endDate = new Date(choiceDay);
-        endDate.setHours(23, 59, 59, 999); // Thời gian kết thúc
-        break;
-      default:
-        return res.status(400).json({ msg: "Loại thống kê không hợp lệ" });
-    }
+    case "30days":
+      startDate = new Date(today);
+      startDate.setDate(startDate.getDate() - 29); // Includes today
+      endDate = new Date(today);
+      endDate.setHours(23, 59, 59, 999);
+      break;
 
-    const thongKe = await HoaDon.aggregate([
-      {
-        $match: {
-          trangThai: "Đã Thanh Toán",
-          createdAt: {
-            $gte: startDate,
-            $lte: endDate,
-          },
-        },
-      },
-      {
-        $lookup: {
-          from: "CaLamViec", // Tên collection trong MongoDB thường là số nhiều
-          localField: "id_caLamViec",
-          foreignField: "_id",
-          as: "caLamViec",
-        },
-      },
-      {
-        $unwind: "$caLamViec", // Mở gói mảng caLamViec
-      },
-      {
-        $match: {
-          "caLamViec.id_nhaHang": id_nhaHang, // Lọc theo id_nhaHang
-        },
-      },
-      {
-        $group: {
-          _id: null, // Nhóm tất cả kết quả lại với nhau
-          tongDoanhThu: { $sum: "$tongGiaTri" }, // Tính tổng giá trị thanh toán
-          tongKhuyenMai: { $sum: "$tienGiamGia" },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          tongDoanhThu: 1, // Giữ trường tongDoanhThu
-          tongKhuyenMai: 1,
-        },
-      },
-    ]);
+    case "lastMonth":
+      startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+      endDate.setHours(23, 59, 59, 999);
+      break;
 
-    res.status(200).json(thongKe);
-  } catch (error) {
-    res.status(400).json({ msg: error.message });
+    case "custom":
+      startDate = new Date(req.query.startDate);
+      endDate = new Date(req.query.endDate);
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        throw new Error(
+          "Cần cung cấp ngày bắt đầu và kết thúc hợp lệ cho loại thống kê tùy chỉnh"
+        );
+      }
+      break;
+
+    case "choiceDay":
+      const choiceDay = new Date(req.query.choiceDay);
+      if (isNaN(choiceDay.getTime())) {
+        throw new Error("Ngày không hợp lệ");
+      }
+      startDate = new Date(choiceDay);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(choiceDay);
+      endDate.setHours(23, 59, 59, 999);
+      break;
+
+    default:
+      throw new Error("Loại thống kê không hợp lệ");
   }
+
+  return { startDate, endDate };
 };
 
-//top5
-exports.lay_top_5_mon_an_ban_chay = async (req, res, next) => {
+/**
+ * 1. Thống Kê Tổng Doanh Thu
+ * Tính tổng doanh thu và tổng khuyến mãi cho một nhà hàng cụ thể trong khoảng thời gian xác định.
+ */
+exports.thongKeTongDoanhThu = async (req, res, next) => {
   try {
-    let { type } = req.query;
+    let { type } = req.query; // 'today','yesterday', '7days', '30days', 'custom', 'lastMonth', 'choiceDay'
     const { id_nhaHang } = req.body;
 
     if (!id_nhaHang) {
@@ -142,139 +84,139 @@ exports.lay_top_5_mon_an_ban_chay = async (req, res, next) => {
     }
 
     if (!type) {
-      type = "today"; // Mặc định là hôm nay nếu không truyền type
+      type = "today"; // Default to today
     }
+
     let startDate, endDate;
-
-    // Xác định ngày bắt đầu và kết thúc dựa trên loại thống kê
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Thiết lập thời gian bắt đầu của ngày hôm nay
-
-    switch (type) {
-      case "today":
-        startDate = new Date(today);
-        endDate = new Date(today);
-        endDate.setHours(23, 59, 59, 999); // Kết thúc ngày hôm nay
-        break;
-      case "yesterday":
-        startDate = new Date(today);
-        startDate.setDate(startDate.getDate() - 1); // Ngày hôm qua
-        endDate = new Date(startDate);
-        endDate.setHours(23, 59, 59, 999); // Kết thúc ngày hôm qua
-        break;
-      case "7days":
-        startDate = new Date(today);
-        startDate.setDate(startDate.getDate() - 6); // Bắt đầu từ 7 ngày trước
-        endDate = new Date(today);
-        endDate.setHours(23, 59, 59, 999); // Kết thúc vào cuối ngày hôm nay
-        break;
-      case "30days":
-        startDate = new Date(today);
-        startDate.setDate(startDate.getDate() - 29); // Bắt đầu từ 30 ngày trước
-        endDate = new Date(today);
-        endDate.setHours(23, 59, 59, 999); // Kết thúc vào cuối ngày hôm nay
-        break;
-      case "lastMonth":
-        const firstDayLastMonth = new Date(
-          today.getFullYear(),
-          today.getMonth() - 1,
-          1
-        ); // Ngày đầu tiên của tháng trước
-        const lastDayLastMonth = new Date(
-          today.getFullYear(),
-          today.getMonth(),
-          0
-        ); // Ngày cuối cùng của tháng trước
-        startDate = firstDayLastMonth;
-        endDate = lastDayLastMonth;
-        endDate.setHours(23, 59, 59, 999); // Đặt thời điểm cuối ngày
-        break;
-      case "choiceDay":
-        const choiceDay = new Date(req.query.choiceDay);
-        if (!choiceDay || isNaN(choiceDay.getTime())) {
-          return res.status(400).json({ msg: "Ngày không hợp lệ" });
-        }
-        startDate = new Date(choiceDay);
-        startDate.setHours(0, 0, 0, 0); // Thời gian bắt đầu
-        endDate = new Date(choiceDay);
-        endDate.setHours(23, 59, 59, 999); // Thời gian kết thúc
-        break;
-      case "custom":
-        startDate = new Date(req.query.startDate);
-        endDate = new Date(req.query.endDate);
-        if (!startDate || !endDate) {
-          return res.status(400).json({
-            msg: "Cần cung cấp ngày bắt đầu và kết thúc cho loại thống kê tùy chỉnh",
-          });
-        }
-        break;
-      default:
-        return res.status(400).json({ msg: "Loại thống kê không hợp lệ" });
+    try {
+      ({ startDate, endDate } = getDateRange(type, req));
+    } catch (error) {
+      return res.status(400).json({ msg: error.message });
     }
 
-    const topMonAn = await ChiTietHoaDon.aggregate([
+    const thongKe = await HoaDon.aggregate([
       {
         $match: {
-          createdAt: { $gte: startDate, $lte: endDate }, // Lọc theo ngày
+          trangThai: "Đã Thanh Toán",
+          createdAt: { $gte: startDate, $lte: endDate },
         },
       },
       {
         $lookup: {
-          from: "HoaDon", // Tên collection trong MongoDB thường là số nhiều
-          localField: "id_hoaDon", // Giả sử trường liên kết trong ChiTietHoaDon
-          foreignField: "_id",
-          as: "hoaDon",
-        },
-      },
-      {
-        $unwind: "$hoaDon", // Mở gói mảng hoaDon
-      },
-      {
-        $lookup: {
-          from: "CaLamViec",
-          localField: "hoaDon.id_caLamViec",
+          from: "CaLamViec", // Ensure the collection name matches your database
+          localField: "id_caLamViec",
           foreignField: "_id",
           as: "caLamViec",
         },
       },
-      {
-        $unwind: "$caLamViec",
-      },
+      { $unwind: "$caLamViec" },
       {
         $match: {
-          "caLamViec.id_nhaHang": mongoose.Types.ObjectId(id_nhaHang), // Lọc theo id_nhaHang
-          "hoaDon.trangThai": "Đã Thanh Toán",
+          "caLamViec.id_nhaHang": new mongoose.Types.ObjectId(id_nhaHang),
         },
       },
       {
         $group: {
-          _id: "$id_monAn", // Nhóm theo ID món ăn
-          soLuongMon: { $sum: "$soLuongMon" }, // Tính tổng số lượng món ăn bán ra
+          _id: null,
+          tongDoanhThu: { $sum: "$tongGiaTri" },
+          tongKhuyenMai: { $sum: "$tienGiamGia" },
         },
       },
       {
-        $sort: { soLuongMon: -1 }, // Sắp xếp theo số lượng giảm dần
+        $project: {
+          _id: 0,
+          tongDoanhThu: 1,
+          tongKhuyenMai: 1,
+        },
       },
+    ]);
+
+    // If no data found, return zero values
+    const result = thongKe[0] || { tongDoanhThu: 0, tongKhuyenMai: 0 };
+
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(400).json({ msg: error.message });
+  }
+};
+
+/**
+ * 2. Lấy Top 5 Món Ăn Bán Chạy
+ * Truy xuất 5 món ăn bán chạy nhất cho một nhà hàng cụ thể trong khoảng thời gian xác định.
+ */
+exports.lay_top_5_mon_an_ban_chay = async (req, res, next) => {
+  try {
+    let { type } = req.query; // 'today','yesterday', '7days', '30days', 'custom', 'lastMonth', 'choiceDay'
+    const { id_nhaHang } = req.body;
+
+    if (!id_nhaHang) {
+      return res.status(400).json({ msg: "Cần cung cấp id_nhaHang" });
+    }
+
+    if (!type) {
+      type = "today"; // Default to today
+    }
+
+    let startDate, endDate;
+    try {
+      ({ startDate, endDate } = getDateRange(type, req));
+    } catch (error) {
+      return res.status(400).json({ msg: error.message });
+    }
+
+    const topMonAn = await HoaDon.aggregate([
       {
-        $limit: 6, // Giới hạn lấy ra 5 bản ghi
+        $match: {
+          trangThai: "Đã Thanh Toán",
+          createdAt: { $gte: startDate, $lte: endDate },
+        },
       },
       {
         $lookup: {
-          from: "MonAn", // Tên collection trong MongoDB thường là số nhiều
+          from: "CaLamViec",
+          localField: "id_caLamViec",
+          foreignField: "_id",
+          as: "caLamViec",
+        },
+      },
+      { $unwind: "$caLamViec" },
+      {
+        $match: {
+          "caLamViec.id_nhaHang": new mongoose.Types.ObjectId(id_nhaHang),
+        },
+      },
+      {
+        $lookup: {
+          from: "ChiTietHoaDon",
+          localField: "_id",
+          foreignField: "id_hoaDon",
+          as: "chiTietHoaDon",
+        },
+      },
+      { $unwind: "$chiTietHoaDon" },
+      {
+        $group: {
+          _id: "$chiTietHoaDon.id_monAn",
+          soLuongMon: { $sum: "$chiTietHoaDon.soLuongMon" },
+        },
+      },
+      { $sort: { soLuongMon: -1 } },
+      { $limit: 6 },
+      {
+        $lookup: {
+          from: "MonAn",
           localField: "_id",
           foreignField: "_id",
           as: "chiTietMonAn",
         },
       },
-      {
-        $unwind: "$chiTietMonAn", // Mở gói mảng chiTietMonAn để dễ truy xuất
-      },
+      { $unwind: "$chiTietMonAn" },
       {
         $project: {
-          _id: 1, // ID món ăn
-          tenMon: "$chiTietMonAn.tenMon", // Tên món ăn từ bảng MonAn
-          anhMonAn: "$chiTietMonAn.anhMonAn", // Ảnh món ăn từ bảng MonAn
-          soLuongMon: 1, // Số lượng món ăn
+          _id: 1,
+          tenMon: "$chiTietMonAn.tenMon",
+          anhMonAn: "$chiTietMonAn.anhMonAn",
+          soLuongMon: 1,
         },
       },
     ]);
@@ -285,100 +227,35 @@ exports.lay_top_5_mon_an_ban_chay = async (req, res, next) => {
   }
 };
 
-//doi thanh tra ve tong tien mat va tong ck
+/**
+ * 3. Thống Kê Hình Thức Thanh Toán
+ * Tính tổng tiền mặt và tổng tiền chuyển khoản cho một nhà hàng cụ thể trong khoảng thời gian xác định.
+ */
 exports.thong_ke_hinh_thuc_thanh_toan = async (req, res, next) => {
   try {
-    let { type, hinhThucThanhToan } = req.query;
+    let { type } = req.query; // 'today','yesterday', '7days', '30days', 'custom', 'lastMonth', 'choiceDay'
     const { id_nhaHang } = req.body;
 
     if (!id_nhaHang) {
       return res.status(400).json({ msg: "Cần cung cấp id_nhaHang" });
     }
 
-    // Chuyển đổi hinhThucThanhToan từ string sang boolean
-    if (hinhThucThanhToan === "true") {
-      hinhThucThanhToan = true;
-    } else if (hinhThucThanhToan === "false") {
-      hinhThucThanhToan = false;
-    }
-
     if (!type) {
-      type = "today"; // Mặc định là hôm nay nếu không truyền type
+      type = "today"; // Default to today
     }
+
     let startDate, endDate;
-
-    // Xác định ngày bắt đầu và kết thúc dựa trên loại thống kê
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Thiết lập thời gian bắt đầu của ngày hôm nay
-
-    switch (type) {
-      case "today":
-        startDate = new Date(today);
-        endDate = new Date(today);
-        endDate.setHours(23, 59, 59, 999); // Kết thúc ngày hôm nay
-        break;
-      case "yesterday":
-        startDate = new Date(today);
-        startDate.setDate(startDate.getDate() - 1); // Ngày hôm qua
-        endDate = new Date(startDate);
-        endDate.setHours(23, 59, 59, 999); // Kết thúc ngày hôm qua
-        break;
-      case "7days":
-        startDate = new Date(today);
-        startDate.setDate(startDate.getDate() - 6); // Bắt đầu từ 7 ngày trước
-        endDate = new Date(today);
-        endDate.setHours(23, 59, 59, 999); // Kết thúc vào cuối ngày hôm nay
-        break;
-      case "30days":
-        startDate = new Date(today);
-        startDate.setDate(startDate.getDate() - 29); // Bắt đầu từ 30 ngày trước
-        endDate = new Date(today);
-        endDate.setHours(23, 59, 59, 999); // Kết thúc vào cuối ngày hôm nay
-        break;
-      case "lastMonth":
-        const firstDayLastMonth = new Date(
-          today.getFullYear(),
-          today.getMonth() - 1,
-          1
-        ); // Ngày đầu tiên của tháng trước
-        const lastDayLastMonth = new Date(
-          today.getFullYear(),
-          today.getMonth(),
-          0
-        ); // Ngày cuối cùng của tháng trước
-        startDate = firstDayLastMonth;
-        endDate = lastDayLastMonth;
-        endDate.setHours(23, 59, 59, 999); // Đặt thời điểm cuối ngày
-        break;
-      case "choiceDay":
-        const choiceDay = new Date(req.query.choiceDay);
-        if (!choiceDay || isNaN(choiceDay.getTime())) {
-          return res.status(400).json({ msg: "Ngày không hợp lệ" });
-        }
-        startDate = new Date(choiceDay);
-        startDate.setHours(0, 0, 0, 0); // Thời gian bắt đầu
-        endDate = new Date(choiceDay);
-        endDate.setHours(23, 59, 59, 999); // Thời gian kết thúc
-        break;
-      case "custom":
-        startDate = new Date(req.query.startDate);
-        endDate = new Date(req.query.endDate);
-        if (!startDate || !endDate) {
-          return res.status(400).json({
-            msg: "Cần cung cấp ngày bắt đầu và kết thúc cho loại thống kê tùy chỉnh",
-          });
-        }
-        break;
-      default:
-        return res.status(400).json({ msg: "Loại thống kê không hợp lệ" });
+    try {
+      ({ startDate, endDate } = getDateRange(type, req));
+    } catch (error) {
+      return res.status(400).json({ msg: error.message });
     }
 
-    // Lấy tổng Tiền Mặt và Chuyển Khoản theo nhà hàng
     const thongKeHTTT = await HoaDon.aggregate([
       {
         $match: {
           trangThai: "Đã Thanh Toán",
-          createdAt: { $gte: startDate, $lte: endDate }, // Lọc các hóa đơn theo ngày
+          createdAt: { $gte: startDate, $lte: endDate },
         },
       },
       {
@@ -389,47 +266,52 @@ exports.thong_ke_hinh_thuc_thanh_toan = async (req, res, next) => {
           as: "caLamViec",
         },
       },
-      {
-        $unwind: "$caLamViec",
-      },
+      { $unwind: "$caLamViec" },
       {
         $match: {
-          "caLamViec.id_nhaHang": mongoose.Types.ObjectId(id_nhaHang), // Lọc theo id_nhaHang
+          "caLamViec.id_nhaHang": new mongoose.Types.ObjectId(id_nhaHang),
         },
       },
       {
         $group: {
-          _id: null, // Nhóm tất cả các hóa đơn lại với nhau
+          _id: null,
           tongTienMat: {
             $sum: {
-              $cond: [{ $eq: ["$hinhThucThanhToan", true] }, "$tongGiaTri", 0], // Tổng tiền mặt
+              $cond: [{ $eq: ["$hinhThucThanhToan", false] }, "$tongGiaTri", 0],
             },
           },
           tongChuyenKhoan: {
             $sum: {
-              $cond: [{ $eq: ["$hinhThucThanhToan", false] }, "$tongGiaTri", 0], // Tổng chuyển khoản
+              $cond: [{ $eq: ["$hinhThucThanhToan", true] }, "$tongGiaTri", 0],
             },
           },
         },
       },
       {
         $project: {
-          _id: 0, // Không hiển thị trường _id trong kết quả
+          _id: 0,
           tongTienMat: 1,
           tongChuyenKhoan: 1,
         },
       },
     ]);
 
-    res.status(200).json(thongKeHTTT);
+    // If no data found, return zero values
+    const result = thongKeHTTT[0] || { tongTienMat: 0, tongChuyenKhoan: 0 };
+
+    res.status(200).json(result);
   } catch (error) {
     res.status(400).json({ msg: error.message });
   }
 };
 
+/**
+ * 4. Thống Kê Doanh Thu Theo Nguồn
+ * Tính tổng doanh thu từ bàn tại chỗ và bán mang đi cho một nhà hàng cụ thể trong khoảng thời gian xác định.
+ */
 exports.thongKeDoanhThuTheoNguon = async (req, res, next) => {
   try {
-    let { type } = req.query;
+    let { type } = req.query; // 'today','yesterday', '7days', '30days', 'custom', 'lastMonth', 'choiceDay'
     const { id_nhaHang } = req.body;
 
     if (!id_nhaHang) {
@@ -437,83 +319,21 @@ exports.thongKeDoanhThuTheoNguon = async (req, res, next) => {
     }
 
     if (!type) {
-      type = "today"; // Mặc định là hôm nay nếu không truyền type
+      type = "today"; // Default to today
     }
 
     let startDate, endDate;
-
-    // Xác định ngày bắt đầu và kết thúc dựa trên loại thống kê
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Thiết lập thời gian bắt đầu của ngày hôm nay
-
-    switch (type) {
-      case "today":
-        startDate = new Date(today);
-        endDate = new Date(today);
-        endDate.setHours(23, 59, 59, 999); // Kết thúc ngày hôm nay
-        break;
-      case "yesterday":
-        startDate = new Date(today);
-        startDate.setDate(startDate.getDate() - 1); // Ngày hôm qua
-        endDate = new Date(startDate);
-        endDate.setHours(23, 59, 59, 999); // Kết thúc ngày hôm qua
-        break;
-      case "7days":
-        startDate = new Date(today);
-        startDate.setDate(startDate.getDate() - 6); // Bắt đầu từ 7 ngày trước
-        endDate = new Date(today);
-        endDate.setHours(23, 59, 59, 999); // Kết thúc vào cuối ngày hôm nay
-        break;
-      case "30days":
-        startDate = new Date(today);
-        startDate.setDate(startDate.getDate() - 29); // Bắt đầu từ 30 ngày trước
-        endDate = new Date(today);
-        endDate.setHours(23, 59, 59, 999); // Kết thúc vào cuối ngày hôm nay
-        break;
-      case "lastMonth":
-        const firstDayLastMonth = new Date(
-          today.getFullYear(),
-          today.getMonth() - 1,
-          1
-        ); // Ngày đầu tiên của tháng trước
-        const lastDayLastMonth = new Date(
-          today.getFullYear(),
-          today.getMonth(),
-          0
-        ); // Ngày cuối cùng của tháng trước
-        startDate = firstDayLastMonth;
-        endDate = lastDayLastMonth;
-        endDate.setHours(23, 59, 59, 999); // Đặt thời điểm cuối ngày
-        break;
-      case "choiceDay":
-        const choiceDay = new Date(req.query.choiceDay);
-        if (!choiceDay || isNaN(choiceDay.getTime())) {
-          return res.status(400).json({ msg: "Ngày không hợp lệ" });
-        }
-        startDate = new Date(choiceDay);
-        startDate.setHours(0, 0, 0, 0); // Thời gian bắt đầu
-        endDate = new Date(choiceDay);
-        endDate.setHours(23, 59, 59, 999); // Thời gian kết thúc
-        break;
-      case "custom":
-        startDate = new Date(req.query.startDate);
-        endDate = new Date(req.query.endDate);
-        if (!startDate || !endDate) {
-          return res.status(400).json({
-            msg: "Cần cung cấp ngày bắt đầu và kết thúc cho loại thống kê tùy chỉnh",
-          });
-        }
-        break;
-      default:
-        return res.status(400).json({ msg: "Loại thống kê không hợp lệ" });
+    try {
+      ({ startDate, endDate } = getDateRange(type, req));
+    } catch (error) {
+      return res.status(400).json({ msg: error.message });
     }
 
-    // Truy vấn thống kê dựa trên id_nhaHang và nguồn bán hàng
     const thongKeNguon = await HoaDon.aggregate([
       {
         $match: {
-          trangThai: "Đã Thanh Toán", // Chỉ tính hóa đơn đã thanh toán
-          createdAt: { $gte: startDate, $lte: endDate }, // Lọc theo ngày
+          trangThai: "Đã Thanh Toán",
+          createdAt: { $gte: startDate, $lte: endDate },
         },
       },
       {
@@ -524,40 +344,48 @@ exports.thongKeDoanhThuTheoNguon = async (req, res, next) => {
           as: "caLamViec",
         },
       },
-      {
-        $unwind: "$caLamViec",
-      },
+      { $unwind: "$caLamViec" },
       {
         $match: {
-          "caLamViec.id_nhaHang": mongoose.Types.ObjectId(id_nhaHang), // Lọc theo id_nhaHang
+          "caLamViec.id_nhaHang": new mongoose.Types.ObjectId(id_nhaHang),
+        },
+      },
+      {
+        $addFields: {
+          nguon: {
+            $cond: {
+              if: { $or: [{ $eq: ["$id_ban", null] }, { $not: "$id_ban" }] },
+              then: "banMangDi",
+              else: "banTaiCho",
+            },
+          },
         },
       },
       {
         $group: {
-          _id: {
-            banTaiCho: {
-              $cond: {
-                if: { $eq: ["$id_ban", null] },
-                then: "banMangDi",
-                else: "banTaiCho",
-              },
-            },
-          },
-          tongDoanhThu: { $sum: "$tongGiaTri" }, // Tính tổng doanh thu
+          _id: "$nguon", // Nhóm theo trường 'nguon'
+          tongDoanhThu: { $sum: "$tongGiaTri" },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          nguon: "$_id",
+          tongDoanhThu: 1,
         },
       },
     ]);
 
-    // Chuẩn hóa dữ liệu trả về
+    // Normalize the result
     const result = {
       banTaiCho: 0,
       banMangDi: 0,
     };
 
     thongKeNguon.forEach((item) => {
-      if (item._id.banTaiCho === "banTaiCho") {
+      if (item.nguon === "banTaiCho") {
         result.banTaiCho = item.tongDoanhThu;
-      } else if (item._id.banTaiCho === "banMangDi") {
+      } else if (item.nguon === "banMangDi") {
         result.banMangDi = item.tongDoanhThu;
       }
     });
