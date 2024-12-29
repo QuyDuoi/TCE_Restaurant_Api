@@ -1,4 +1,5 @@
 const { ChiTietHoaDon } = require("../models/chiTietHoaDonModel");
+const { HoaDon } = require("../models/hoaDonModel");
 const { MonAn } = require("../models/monAnModel");
 
 // Thêm chi tiết hóa đơn
@@ -83,21 +84,97 @@ exports.cap_nhat_trang_thai_cthd = async (req, res) => {
       return res.status(404).json({ msg: "Không tìm thấy chi tiết hóa đơn" });
     }
 
-    // Đảo ngược trạng thái
-    chiTietHoaDon.trangThai = !chiTietHoaDon.trangThai;
+    const hoaDon = await HoaDon.findById(chiTietHoaDon.id_hoaDon);
 
-    const io = req.app.get("io");
-    io.emit("hoanThanhMon", {
-      msg: "Đầu bếp vừa hoàn thành 1 món ăn!",
-    });
+    // Kiểm tra trạng thái hiện tại và trạng thái mới
+    const checkHoanThanh = !chiTietHoaDon.trangThai; // Nếu hiện tại false, muốn chuyển thành true
 
-    // Lưu thay đổi
-    const result = await chiTietHoaDon.save();
+    if (checkHoanThanh) {
+      // Tìm kiếm ChiTietHoaDon đã hoàn thành cho cùng một HoaDon và cùng một monAn
+      const checkChiTietHT = await ChiTietHoaDon.findOne({
+        id_hoaDon: chiTietHoaDon.id_hoaDon,
+        "monAn.tenMon": chiTietHoaDon.monAn.tenMon,
+        trangThai: true,
+      });
 
-    // Trả về chi tiết hóa đơn đã cập nhật
-    res.status(200).json(result);
+      if (checkChiTietHT) {
+        // Nếu đã có ChiTietHoaDon hoàn thành, cập nhật số lượng và giá tiền
+        checkChiTietHT.soLuongMon += chiTietHoaDon.soLuongMon;
+        checkChiTietHT.giaTien += chiTietHoaDon.giaTien;
+        checkChiTietHT.ghiChu = chiTietHoaDon.ghiChu || checkChiTietHT.ghiChu;
+        await checkChiTietHT.save();
+
+        // Xóa ChiTietHoaDon hiện tại
+        await ChiTietHoaDon.findByIdAndDelete(id);
+
+        // Thông báo qua WebSocket
+        const io = req.app.get("io");
+        io.to(`ban_${hoaDon.id_ban}`)
+          .to("NhanViens")
+          .emit("hoanThanhMon", {
+            msg: `Đầu bếp đã hoàn thành món ${chiTietHoaDon.monAn.tenMon}!`,
+          });
+
+        // Cập nhật tổng giá trị hóa đơn
+        const chiTietList = await ChiTietHoaDon.find({
+          id_hoaDon: chiTietHoaDon.id_hoaDon,
+        });
+        const tongGiaTri = chiTietList.reduce(
+          (total, ct) => total + ct.giaTien,
+          0
+        );
+
+        // Cập nhật tổng giá trị trong hóa đơn
+        await HoaDon.findByIdAndUpdate(chiTietHoaDon.id_hoaDon, { tongGiaTri });
+
+        return res.status(200).json({
+          msg: "Cập nhật trạng thái và tổng giá trị hóa đơn thành công",
+          data: await ChiTietHoaDon.find({
+            id_hoaDon: chiTietHoaDon.id_hoaDon,
+          }),
+        });
+      } else {
+        // Nếu chưa có ChiTietHoaDon hoàn thành, cập nhật trạng thái của ChiTietHoaDon hiện tại
+        chiTietHoaDon.trangThai = true;
+        const result = await chiTietHoaDon.save();
+
+        // Thông báo qua WebSocket
+        const io = req.app.get("io");
+        io.to(`ban_${hoaDon.id_ban}`)
+          .to("NhanViens")
+          .emit("hoanThanhMon", {
+            msg: `Đầu bếp đã hoàn thành món ${chiTietHoaDon.monAn.tenMon}!`,
+          });
+
+        // Cập nhật tổng giá trị hóa đơn
+        const chiTietList = await ChiTietHoaDon.find({
+          id_hoaDon: chiTietHoaDon.id_hoaDon,
+        });
+        const tongGiaTri = chiTietList.reduce(
+          (total, ct) => total + ct.giaTien,
+          0
+        );
+
+        // Cập nhật tổng giá trị trong hóa đơn
+        await HoaDon.findByIdAndUpdate(chiTietHoaDon.id_hoaDon, { tongGiaTri });
+
+        return res.status(200).json({
+          msg: "Cập nhật trạng thái hóa đơn thành công",
+          data: result,
+        });
+      }
+    } else {
+      // Nếu đang đánh dấu thành không hoàn thành, chỉ đảo ngược trạng thái
+      chiTietHoaDon.trangThai = false;
+      const result = await chiTietHoaDon.save();
+
+      return res.status(200).json({
+        msg: "Cập nhật trạng thái hóa đơn thành công",
+        data: result,
+      });
+    }
   } catch (error) {
-    res.status(500).json({ msg: "Lỗi server", error: error.message });
+    return res.status(400).json({ msg: error.message });
   }
 };
 
@@ -122,7 +199,9 @@ exports.lay_ds_chi_tiet_hoa_don = async (req, res, next) => {
   try {
     const { id_hoaDon } = req.body;
 
-    const chiTietHoaDons = await ChiTietHoaDon.find({ id_hoaDon }).sort({ createdAt: 1 });
+    const chiTietHoaDons = await ChiTietHoaDon.find({ id_hoaDon }).sort({
+      createdAt: 1,
+    });
 
     if (!chiTietHoaDons) {
       return res.status(400).json({ msg: "Không có chi tiết hóa đơn nào!" });

@@ -1,7 +1,5 @@
 const mongoose = require("mongoose");
-const { ChiTietHoaDon } = require("../models/chiTietHoaDonModel");
 const { HoaDon } = require("../models/hoaDonModel");
-const { CaLamViec } = require("../models/caLamViecModel");
 
 const getDateRange = (type, req) => {
   let startDate, endDate;
@@ -76,8 +74,7 @@ const getDateRange = (type, req) => {
  */
 exports.thongKeTongDoanhThu = async (req, res, next) => {
   try {
-    let { type } = req.query; // 'today','yesterday', '7days', '30days', 'custom', 'lastMonth', 'choiceDay'
-    const { id_nhaHang } = req.body;
+    let { type, id_nhaHang } = req.query; // 'today','yesterday', '7days', '30days', 'custom', 'lastMonth', 'choiceDay'
 
     if (!id_nhaHang) {
       return res.status(400).json({ msg: "Cần cung cấp id_nhaHang" });
@@ -146,8 +143,7 @@ exports.thongKeTongDoanhThu = async (req, res, next) => {
  */
 exports.lay_top_5_mon_an_ban_chay = async (req, res, next) => {
   try {
-    let { type } = req.query; // 'today','yesterday', '7days', '30days', 'custom', 'lastMonth', 'choiceDay'
-    const { id_nhaHang } = req.body;
+    let { type, id_nhaHang } = req.query; // 'today','yesterday', '7days', '30days', 'custom', 'lastMonth', 'choiceDay'
 
     if (!id_nhaHang) {
       return res.status(400).json({ msg: "Cần cung cấp id_nhaHang" });
@@ -233,8 +229,7 @@ exports.lay_top_5_mon_an_ban_chay = async (req, res, next) => {
  */
 exports.thong_ke_hinh_thuc_thanh_toan = async (req, res, next) => {
   try {
-    let { type } = req.query; // 'today','yesterday', '7days', '30days', 'custom', 'lastMonth', 'choiceDay'
-    const { id_nhaHang } = req.body;
+    let { type, id_nhaHang } = req.query; // 'today','yesterday', '7days', '30days', 'custom', 'lastMonth', 'choiceDay'
 
     if (!id_nhaHang) {
       return res.status(400).json({ msg: "Cần cung cấp id_nhaHang" });
@@ -311,8 +306,7 @@ exports.thong_ke_hinh_thuc_thanh_toan = async (req, res, next) => {
  */
 exports.thongKeDoanhThuTheoNguon = async (req, res, next) => {
   try {
-    let { type } = req.query; // 'today','yesterday', '7days', '30days', 'custom', 'lastMonth', 'choiceDay'
-    const { id_nhaHang } = req.body;
+    let { type, id_nhaHang } = req.query; // 'today','yesterday', '7days', '30days', 'custom', 'lastMonth', 'choiceDay'
 
     if (!id_nhaHang) {
       return res.status(400).json({ msg: "Cần cung cấp id_nhaHang" });

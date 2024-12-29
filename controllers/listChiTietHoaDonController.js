@@ -2,6 +2,7 @@ const { ChiTietHoaDon } = require("../models/chiTietHoaDonModel");
 const { HoaDon } = require("../models/hoaDonModel");
 const { MonAn } = require("../models/monAnModel");
 
+// Cập nhật phương thức thêm danh sách chi tiết hóa đơn
 exports.addListChiTietHoaDon = async (req, res, next) => {
   try {
     const { id_hoaDon, monAn } = req.body; // Nhận id_hoaDon và danh sách món ăn
@@ -31,10 +32,11 @@ exports.addListChiTietHoaDon = async (req, res, next) => {
         }
       }
 
-      // Kiểm tra xem đã có chi tiết hóa đơn cho món ăn này và hóa đơn hiện tại chưa
+      // Kiểm tra xem đã có chi tiết hóa đơn cho món ăn này và hóa đơn hiện tại chưa hoàn thành
       const checkChiTietHD = await ChiTietHoaDon.findOne({
         id_hoaDon,
-        "monAn.tenMon": monAnData ? monAnData.tenMon : null, // So sánh theo tên món ăn nếu tồn tại
+        "monAn.tenMon": monAnData ? monAnData.tenMon : tenMon, // So sánh theo tên món ăn nếu tồn tại, hoặc tên món tùy chọn
+        trangThai: false, // Chỉ tìm các chi tiết chưa hoàn thành
       });
 
       if (checkChiTietHD) {
@@ -49,7 +51,7 @@ exports.addListChiTietHoaDon = async (req, res, next) => {
           await checkChiTietHD.save();
         }
       } else if (soLuong > 0) {
-        // Nếu món ăn chưa có và số lượng > 0 thì thêm chi tiết hóa đơn mới
+        // Nếu món ăn chưa có hoặc các chi tiết đã hoàn thành và số lượng > 0 thì thêm chi tiết hóa đơn mới
         const newChiTiet = new ChiTietHoaDon({
           id_hoaDon: id_hoaDon,
           soLuongMon: soLuong,
@@ -74,7 +76,10 @@ exports.addListChiTietHoaDon = async (req, res, next) => {
 
     // Tính tổng giá trị hóa đơn
     const chiTietList = await ChiTietHoaDon.find({ id_hoaDon });
-    const tongGiaTri = chiTietList.reduce((total, chiTiet) => total + chiTiet.giaTien, 0);
+    const tongGiaTri = chiTietList.reduce(
+      (total, chiTiet) => total + chiTiet.giaTien,
+      0
+    );
 
     // Cập nhật tổng giá trị trong hóa đơn
     hoaDon.tongGiaTri = tongGiaTri;
