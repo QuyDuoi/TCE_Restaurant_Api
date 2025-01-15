@@ -311,6 +311,17 @@ exports.thanh_toan_hoa_don = async (req, res) => {
       id_hoaDon: id_hoaDon,
     }).session(session);
 
+    const monChuaHoanThanh = await ChiTietHoaDon.findOne({
+      id_hoaDon: id_hoaDon,
+      trangThai: false, // Các món chưa hoàn thành
+    }).session(session);
+
+    if (monChuaHoanThanh) {
+      return res.status(400).json({
+        msg: "Có món ăn chưa hoàn thành, không thể thanh toán!",
+      });
+    }
+
     console.log("Các chi tiết của hóa đơn: " + chiTietHoaDons);
 
     // Tính tổng tiền hóa đơn từ tất cả chi tiết
