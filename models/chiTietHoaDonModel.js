@@ -22,8 +22,16 @@ const chiTietHoaDonSchema = new mongoose.Schema(
       required: true,
     },
     lichSuXoa: {
-      
-    }
+      isRequested: { type: Boolean, default: false },
+      isApproved: { type: Boolean, default: null }, // null: pending, true: approved, false: rejected
+      id_nhanVien: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "NhanVien",
+        required: false,
+      },
+      thoiGianYeuCau: { type: Date, default: Date.now },
+      thoiGianXacNhan: { type: Date, required: false },
+    },
   },
   {
     collection: "ChiTietHoaDon",

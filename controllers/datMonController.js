@@ -2,6 +2,7 @@ const { Ban } = require("../models/banModel");
 const { CaLamViec } = require("../models/caLamViecModel");
 const { ChiTietHoaDon } = require("../models/chiTietHoaDonModel");
 const { HoaDon } = require("../models/hoaDonModel");
+const { KhuVuc } = require("../models/khuVucModel");
 const { MonAn } = require("../models/monAnModel");
 const { NhanVien } = require("../models/nhanVienModel");
 const mongoose = require("mongoose");
@@ -23,6 +24,7 @@ exports.dat_mon_an = async (req, res) => {
     }
 
     const checkBan = await Ban.findById(id);
+    const checkKhuVuc = await KhuVuc.findById(checkBan.id_khuVuc);
 
     if (!checkBan) {
       return res.status(404).json({ msg: "Bàn không tồn tại!" });
@@ -58,7 +60,7 @@ exports.dat_mon_an = async (req, res) => {
 
       const io = req.app.get("io");
       io.emit("khachOrder", {
-        msg: `Bàn ${checkBan.tenBan} có Order mới!`,
+        msg: `Bàn ${checkBan.tenBan} - Khu vực ${checkKhuVuc.tenKhuVuc} có Order mới!`,
       });
 
       return res.status(200).json({
@@ -271,6 +273,158 @@ exports.xac_nhan_dat_mon = async (req, res) => {
     await session.abortTransaction();
     session.endSession();
     console.error("Lỗi trong quá trình xử lý:", error.message);
+    return res.status(400).json({ msg: error.message });
+  }
+};
+
+// Phương thức gửi yêu cầu hủy món
+exports.gui_yeu_cau_huy_mon = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const { id_chiTietHoaDon, id_nhanVien } = req.body;
+
+    // 1. Tìm chi tiết hóa đơn
+    const chiTietHoaDon = await ChiTietHoaDon.findById(
+      id_chiTietHoaDon
+    ).session(session);
+
+    if (!chiTietHoaDon) {
+      throw new Error("Chi tiết hóa đơn không tồn tại!");
+    }
+
+    // 2. Kiểm tra xem đã có yêu cầu hủy hay chưa
+    if (chiTietHoaDon.lichSuXoa.isRequested) {
+      throw new Error("Đã có yêu cầu hủy món này rồi!");
+    }
+
+    // 3. Cập nhật thông tin yêu cầu hủy
+    chiTietHoaDon.lichSuXoa.isRequested = true;
+    chiTietHoaDon.lichSuXoa.id_nhanVien = id_nhanVien;
+    chiTietHoaDon.lichSuXoa.thoiGianYeuCau = new Date();
+
+    await chiTietHoaDon.save({ session });
+
+    // 4. Lấy thông tin bàn từ hóa đơn
+    const hoaDon = await HoaDon.findById(chiTietHoaDon.id_hoaDon).session(
+      session
+    );
+    if (!hoaDon) {
+      throw new Error("Hóa đơn không tồn tại!");
+    }
+
+    const ban = await Ban.findById(hoaDon.id_ban).session(session);
+    if (!ban) {
+      throw new Error("Bàn không tồn tại!");
+    }
+
+    const khuVuc = await KhuVuc.findById(ban.id_khuVuc).session(session);
+    if (!khuVuc) {
+      throw new Error("Khu vực không tồn tại!");
+    }
+
+    // 5. Gửi yêu cầu hủy món đến đầu bếp thông qua Socket.IO
+    const io = req.app.get("io");
+    io.to("DauBeps").emit("yeuCauHuyMon", {
+      id_chiTietHoaDon: id_chiTietHoaDon,
+      tenMon: chiTietHoaDon.monAn.tenMon,
+      soLuongMon: chiTietHoaDon.soLuongMon,
+      ban: ban.tenBan,
+      khuVuc: khuVuc.tenKhuVuc,
+    });
+
+    // Commit giao dịch
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(200).json({
+      msg: "Đã gửi yêu cầu hủy món thành công. Đang chờ đầu bếp xác nhận.",
+    });
+  } catch (error) {
+    // Rollback giao dịch nếu có lỗi
+    await session.abortTransaction();
+    session.endSession();
+    return res.status(400).json({ msg: error.message });
+  }
+};
+
+exports.xac_nhan_yeu_cau_huy_mon = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const { id_chiTietHoaDon, isApproved, id_nhanVien } = req.body;
+
+    // 1. Tìm chi tiết hóa đơn
+    const chiTietHoaDon = await ChiTietHoaDon.findById(
+      id_chiTietHoaDon
+    ).session(session);
+
+    if (!chiTietHoaDon) {
+      throw new Error("Chi tiết hóa đơn không tồn tại!");
+    }
+
+    // 2. Kiểm tra xem đã có yêu cầu hủy hay chưa
+    if (!chiTietHoaDon.lichSuXoa.isRequested) {
+      throw new Error("Không tìm thấy yêu cầu hủy món này!");
+    }
+
+    if (chiTietHoaDon.lichSuXoa.isApproved !== null) {
+      throw new Error("Yêu cầu hủy món đã được xử lý trước đó!");
+    }
+
+    // 3. Cập nhật kết quả xác nhận
+    chiTietHoaDon.lichSuXoa.isApproved = isApproved;
+    chiTietHoaDon.lichSuXoa.id_nhanVien = id_nhanVien; // Nhân viên đầu bếp xác nhận
+    chiTietHoaDon.lichSuXoa.thoiGianXacNhan = new Date();
+
+    if (isApproved) {
+      // Nếu được phê duyệt, cập nhật trạng thái món ăn trong bàn và hóa đơn
+      // Tìm hóa đơn
+      const hoaDon = await HoaDon.findById(chiTietHoaDon.id_hoaDon).session(
+        session
+      );
+      if (!hoaDon) {
+        throw new Error("Hóa đơn không tồn tại!");
+      }
+
+      // Cập nhật tổng giá trị hóa đơn
+      hoaDon.tongGiaTri -= chiTietHoaDon.giaTien;
+      await hoaDon.save({ session });
+
+      // Nếu cần, bạn có thể cập nhật trạng thái bàn nếu tổng giá trị hóa đơn giảm xuống 0
+      if (hoaDon.tongGiaTri <= 0) {
+        const ban = await Ban.findById(hoaDon.id_ban).session(session);
+        if (ban) {
+          ban.trangThai = "Trống";
+          await ban.save({ session });
+        }
+      }
+    }
+
+    await chiTietHoaDon.save({ session });
+
+    // 4. Gửi phản hồi đến nhân viên phục vụ bàn thông qua Socket.IO
+    const io = req.app.get("io");
+    io.to("NhanViens").emit("phanHoiHuyMon", {
+      id_chiTietHoaDon: id_chiTietHoaDon,
+      isApproved: isApproved,
+    });
+
+    // Commit giao dịch
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(200).json({
+      msg: isApproved
+        ? "Yêu cầu hủy món đã được phê duyệt."
+        : "Yêu cầu hủy món đã bị từ chối.",
+    });
+  } catch (error) {
+    // Rollback giao dịch nếu có lỗi
+    await session.abortTransaction();
+    session.endSession();
     return res.status(400).json({ msg: error.message });
   }
 };

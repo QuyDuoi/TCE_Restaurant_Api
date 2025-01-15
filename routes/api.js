@@ -50,6 +50,8 @@ const {
   kiem_tra_mat_khau,
   xac_nhan_dat_mon,
   tu_choi_dat_mon,
+  xac_nhan_yeu_cau_huy_mon,
+  gui_yeu_cau_huy_mon,
 } = require("../controllers/datMonController");
 
 const {
@@ -173,6 +175,8 @@ router.post("/datMonAn", dat_mon_an);
 router.post("/kiemTraMatKhau", kiem_tra_mat_khau);
 router.post("/xacNhanDatMon", xac_nhan_dat_mon);
 router.post("/tuChoiDatMon", tu_choi_dat_mon);
+router.post("/xacNhanYeuCauHuyMon", xac_nhan_yeu_cau_huy_mon);
+router.post("/guiYeuCauHuyMon", gui_yeu_cau_huy_mon);
 
 // Restful Api Bàn
 router.post("/themBan", them_ban_va_qrcode);

@@ -6,9 +6,10 @@ const { ChiTietHoaDon } = require("../models/chiTietHoaDonModel");
 const { MonAn } = require("../models/monAnModel");
 const { NhanVien } = require("../models/nhanVienModel");
 const { KhuVuc } = require("../models/khuVucModel");
+const { TinNhan } = require("../models/tinNhanModel");
 
 const taoMatKhau = () => {
-  return Math.floor(1000 + Math.random() * 9000).toString(); // Tạo chuỗi 6 số
+  return Math.floor(1000 + Math.random() * 9000).toString();
 };
 
 // Thêm hóa đơn
@@ -341,6 +342,8 @@ exports.thanh_toan_hoa_don = async (req, res) => {
     caLamHienTai.tongDoanhThu += tongGiaTriHoaDon;
 
     await caLamHienTai.save({ session });
+
+    await TinNhan.deleteMany({ id_ban: banThanhToan._id }).session(session);
 
     // Cam kết giao dịch
     await session.commitTransaction();

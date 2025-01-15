@@ -26,6 +26,12 @@ module.exports = function (server) {
       } else if (role === "NhanVien") {
         socket.join("NhanViens");
         console.log("Có một nhân viên đã vào phòng");
+      } else if (role === "DauBep") {
+        socket.join("DauBeps");
+        console.log("Có 1 đầu bếp vào");
+        
+      } else if (role === "PhucVuBan") {
+        socket.join(`PhucVuBan_${id_ban}`);
       }
     });
 

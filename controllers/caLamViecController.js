@@ -105,27 +105,26 @@ exports.check_dong_ca_lam_viec = async (req, res) => {
     }
 
     // 3. Lấy danh sách khu vực thuộc nhà hàng từ id_nhaHang
-    const khuVucList = await KhuVuc.find({ id_nhaHang: caLamHienTai.id_nhaHang }).session(session);
+    const khuVucList = await KhuVuc.find({
+      id_nhaHang: caLamHienTai.id_nhaHang,
+    }).session(session);
 
     // Lấy danh sách id_khuVuc
     const idKhuVucList = khuVucList.map((khuVuc) => khuVuc._id);
 
     // Cập nhật tất cả bàn thuộc các khu vực này
-    const result = await Ban.updateMany(
+    await Ban.updateMany(
       { id_khuVuc: { $in: idKhuVucList } }, // Lọc các bàn theo id_khuVuc
       {
         $set: {
           trangThai: "Trống",
           ghiChu: "",
-          matKhau: taoMatKhau(),
           danhSachOrder: [],
-          trangThaiOrder: false
+          trangThaiOrder: false,
         },
       },
       { session }
     );
-
-    console.log(result);
 
     const io = req.app.get("io");
     io.emit("dongCaLam", {
@@ -171,7 +170,9 @@ exports.dong_ca_bat_chap = async (req, res) => {
     }
 
     // 2. Tìm ca làm việc hiện tại
-    const caLamHienTai = await CaLamViec.findById(id_caLamViec).session(session);
+    const caLamHienTai = await CaLamViec.findById(id_caLamViec).session(
+      session
+    );
     if (!caLamHienTai) {
       return res.status(400).json({ msg: "Không tìm thấy ca làm việc!" });
     }
@@ -183,9 +184,6 @@ exports.dong_ca_bat_chap = async (req, res) => {
         trangThai: "Chưa Thanh Toán",
       },
       { session }
-    );
-    console.log(
-      `Đã xóa ${hoaDonChuaThanhToan.deletedCount} hóa đơn chưa thanh toán.`
     );
 
     // 4. Lấy danh sách khu vực thuộc nhà hàng từ id_nhaHang trong ca làm việc
@@ -202,13 +200,11 @@ exports.dong_ca_bat_chap = async (req, res) => {
         $set: {
           trangThai: "Trống",
           ghiChu: "",
-          matKhau: taoMatKhau(),
           danhSachOrder: [],
         },
       },
       { session }
     );
-    console.log(`Đã cập nhật ${result.modifiedCount} bàn.`);
 
     // 6. Cập nhật thời gian kết thúc của ca làm việc
     caLamHienTai.ketThuc = new Date();
